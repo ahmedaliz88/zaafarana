@@ -8,7 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<meta name="theme-color" content="#1B2A4A"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="يومية الزعفرانة">
+<meta name="theme-color" content="#1B2A4A"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" type="image/png" href="icon-192.png"><link rel="manifest" href="manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="يومية الزعفرانة">
 <style>
 /* Layout: site-ledger tool — letterhead band, sticky tab bar, stacked section sheets, fixed action bar on the daily screen */
 :root{
@@ -1071,7 +1071,7 @@ async function saveFile(filename,blob){
   if(!local){
     if(!window.firebase){$("#main").innerHTML='<div class="card login"><b>تعذر تحميل التطبيق</b><p class="small muted">تأكد من الاتصال بالإنترنت ثم أعد فتح الصفحة.</p><button class="btn pri" onclick="location.reload()">إعادة المحاولة</button></div>';return}
     firebase.initializeApp(FB_CFG);S.auth=firebase.auth();S.db=firebase.firestore();
-    try{await S.db.enablePersistence({synchronizeTabs:true})}catch(e){}
+    try{await Promise.race([S.db.enablePersistence({synchronizeTabs:true}),new Promise(r=>setTimeout(r,2500))])}catch(e){}
     S.auth.onAuthStateChanged(u=>{if(S.bootstrapping)return;afterAuth(u)});
     return}
   S.local=true;S.isOwner=true;S.uid="local";localApply();resolveRole();
