@@ -21,19 +21,6 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/dstat/$(d))
         && get(/databases/$(database)/documents/dstat/$(d)).data.status == 'closed';
     }
-    function same(k) { return request.resource.data.get(k, []) == resource.data.get(k, []); }
-    function emptyArr(k) { return request.resource.data.get(k, []).size() == 0; }
-    function sameContent() {
-      return same('hourly') && same('mex') && same('wex') && same('trk') && same('itm') && same('dsl')
-        && same('exp') && same('pay') && same('adv') && same('geo') && same('inc') && same('adj')
-        && request.resource.data.get('notes', '') == resource.data.get('notes', '')
-        && request.resource.data.get('approved', false) == resource.data.get('approved', false);
-    }
-    function emptyContent() {
-      return emptyArr('hourly') && emptyArr('mex') && emptyArr('wex') && emptyArr('trk') && emptyArr('itm')
-        && emptyArr('dsl') && emptyArr('exp') && emptyArr('pay') && emptyArr('adv') && emptyArr('geo')
-        && emptyArr('inc') && emptyArr('adj') && request.resource.data.get('approved', false) == false;
-    }
 
     // owner record: readable before login (to know whether setup is needed); created once
     match /meta/owner {
@@ -58,14 +45,14 @@ service cloud.firestore {
     match /days/{d} {
       allow read: if isMgr();
       allow write: if isOwner();
-      // accountant may only close an open day, without changing its content
-      allow update: if isAcc() && request.resource.data.status == 'closed'
-        && resource.data.get('status', 'open') != 'closed' && sameContent();
-      allow create: if isAcc() && request.resource.data.status == 'closed' && emptyContent();
+      // accountant enters and edits an open day (and closes it); a closed day changes only with the owner
+      allow create: if isAcc() && request.resource.data.get('approved', false) == false;
+      allow update: if isAcc() && resource.data.get('status', 'open') != 'closed'
+        && request.resource.data.get('approved', false) == false;
     }
     match /dstat/{d} {
       allow read: if isMember();
-      allow write: if isOwner() || (isAcc() && request.resource.data.status == 'closed');
+      allow write: if isOwner() || isAcc();
     }
     match /entries/{id} {
       allow read: if isMgr() || (signedIn() && resource.data.by == request.auth.uid);

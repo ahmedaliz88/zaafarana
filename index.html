@@ -113,6 +113,18 @@ details.sec[open] .chev{transform:rotate(135deg);margin-top:4px}
 .seg button.b[aria-pressed="true"]{background:var(--bad);color:#fff}
 .seg button.w[aria-pressed="true"]{background:#C9A227;color:#1B2A4A}
 .line{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.hrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:end;margin-top:4px}
+.hrow .f{min-width:0}.hrow input{min-width:0;width:100%}
+.hrow .dr{grid-column:span 2}
+.hrow .net{font-size:13px}
+@media(min-width:720px){.hrow{grid-template-columns:110px 110px 90px minmax(0,1fr) auto 110px}.hrow .dr{grid-column:auto}}
+.net{font-weight:700;white-space:nowrap;align-self:center}.net.bad{color:var(--bad)}
+.yhint{font-size:12px;color:var(--muted)}
+.wtag{display:inline-block;color:var(--bad);font-size:12px;font-weight:600}
+.chipbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.chipbar button{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
+.balinfo{grid-column:1/-1;font-size:12px}
+.cmp td,.cmp th{padding:3px 6px;font-size:13px;border-bottom:1px solid var(--line)}
 .line:last-child{border-bottom:0}
 .line .nm{flex:1;min-width:120px}
 .line .nm small{display:block;color:var(--muted);font-size:12px}
@@ -350,7 +362,7 @@ function compute(asOf){
 
 /* ============================================================ day permissions */
 function dayStatus(date){const d=S.days[date];return d?(d.status||"open"):"none"}
-function canEditDay(date){const st=dayStatus(date);if(isOwner())return st!=="closed";return false}
+function canEditDay(date){const st=dayStatus(date);if(isOwner())return st!=="closed";if(S.role==="accountant")return st!=="closed"&&date<=todayStr();return false}
 function accOpen(date){return S.role==="accountant"&&dayStatus(date)!=="closed"&&date<=todayStr()}
 function fieldDates(){const t=todayStr();return[t,addDays(t,-1)]}
 function canFieldEnter(date){return S.role==="field"&&fieldDates().includes(date)&&dayStatus(date)!=="closed"}
@@ -515,7 +527,13 @@ function updateDayTotals(){if(S.tab!=="day"||!S.cur)return;const t=dayTotals(S.c
 }
 function srcAttrs(r){return`data-src="${r._src}" data-i="${r._i}"`}
 function byTag(r){return r._src&&r._src.startsWith("ent:")?`<span class="tag">أدخله: ${esc(nameSync(r._by))}</span>`:""}
+function focusKey(el){if(!el||!el.dataset||!el.closest||!el.closest("#dayForm"))return null;return["arr","k","src","i","e","t","it","exf","id"].map(k=>el.dataset[k]||"").join("|")+"|"+el.tagName}
 function renderDay(main){
+  const fk=focusKey(document.activeElement);
+  renderDayInner(main);
+  if(fk){const el=[...main.querySelectorAll("#dayForm input,#dayForm select")].find(x=>focusKey(x)===fk);if(el){const det=el.closest("details");if(det)det.open=true;try{el.focus({preventScroll:true})}catch(e){el.focus()}}}
+}
+function renderDayInner(main){
   if(!S.cur||S.cur.date!==S.date)openDay(S.date);
   const date=S.date,m=M(),d=mergedDay(date,true),edit=canEditDay(date),st=dayStatus(date),isFri=dow(date)===5,day=S.days[date];
   const ro=edit?"":" disabled";
@@ -524,25 +542,28 @@ function renderDay(main){
   if(st==="closed")banner=`<div class="alert ${day.approved?"ok":"warn"}">اليومية مقفولة${day.closedAt?" بواسطة "+esc(nameSync(day.closedBy))+" – "+new Date(day.closedAt).toLocaleString("ar-EG"):""}${day.approved?" ومعتمدة من المالك":" – بانتظار اعتماد المالك"}.</div>`;
   if(tampered(date))banner+=`<div class="alert bad"><b>تنبيه:</b> محتوى هذا اليوم يختلف عن النسخة المعتمدة.</div>`;
   if(date>todayStr()&&!isOwner())banner+=`<div class="alert info">لا يمكن إدخال يومية لتاريخ مستقبلي.</div>`;
-  const myEnt=safe(date+"_"+S.uid),aOpen=accOpen(date),AP=S.accPerms||[];
-  const canRow=r=>edit||(aOpen&&r._src==="ent:"+myEnt);const canAdd=arr=>edit||(aOpen&&AP.includes(arr));
-  if(S.role==="accountant")banner+=aOpen?`<div class="alert info">يمكنك إضافة وتعديل إدخالاتك فى: <b>${AP.map(k=>ACC_PERMS[k]).join("، ")||"—"}</b>. باقى اليومية للعرض والمراجعة – لأى تصحيح استخدم (طلب تعديل).</div>`:"";
+  const aOpen=false;
+  const isEnt=r=>!!(r&&r._src&&r._src.startsWith("ent:"));
+  const canRow=r=>edit&&(!isEnt(r)||isOwner());const canAdd=arr=>edit;const rro=r=>canRow(r)?"":" disabled";
+  const Y=addDays(date,-1),yd=mergedDay(Y,false),CP=compute(date),WARN=dayWarnings(date,CP);
   const hourlyAct=m.hourly.filter(e=>isActive(e,date)||d.hourly.some(h=>h.e===e.id));
   const monthlyAct=m.monthly.filter(e=>isActive(e,date));
   const workersAct=m.workers.filter(w=>isActive(w,date));
   const trucksAct=m.trucks.filter(t=>isActive(t,date)||d.trk.some(x=>x.t===t.id));
   const supName=id=>{const s=byId(m.suppliers,id);return s?s.name:""};
   // hourly
-  let hourlyHtml=hourlyAct.map(e=>{const rows=d.hourly.filter(h=>h.e===e.id);const r=rateAt(e.rates,date)||0;
-    const list=(rows.length?rows:[{e:e.id,_src:"new",_i:-1}]).map(h=>{const hrs=hourlyHours(h);const lock=h._src&&h._src.startsWith("ent:")&&!isMgr();
-      return`<div class="g" style="margin-top:4px">
-        <label class="f">البدء<input type="time" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="s" value="${esc(h.s||"")}"${ro}></label>
-        <label class="f">الانتهاء<input type="time" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="t" value="${esc(h.t||"")}"${ro}></label>
-        <label class="f">أو ساعات مباشرة<input inputmode="decimal" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="h" value="${esc(h.h??"")}"${ro}></label>
-        <label class="f">خصم (ساعات)<input inputmode="decimal" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="dh" value="${esc(h.dh??"")}"${ro}></label>
-        <label class="f" style="grid-column:span 2">سبب الخصم<input ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="dr" value="${esc(h.dr||"")}"${ro}></label>
-        <div class="small muted" style="align-self:end">صافى <b class="num" data-hrs>${fmt(hrs,2)}</b> س ${byTag(h)}${h._src!=="new"&&edit?` <button type="button" class="link" data-del="hourly" ${srcAttrs(h)}>حذف</button>`:""}</div></div>`}).join("");
-    return`<div class="item ${rows.length?"on":""}"><div class="hd"><b>${esc(e.name)}</b><span class="muted small">${esc(e.type||"")} · ${esc(supName(e.sup))} · ${r?fmt(r)+" ج/س":"<span style='color:var(--bad)'>بدون سعر</span>"}</span>${edit?`<button type="button" class="btn sm" data-addshift="${e.id}" style="margin-inline-start:auto">+ وردية</button>`:""}</div>${list}</div>`}).join("")||'<div class="empty">لا توجد معدات بالساعة نشطة. أضفها من الإعدادات.</div>';
+  const yHrs=id=>yd.hourly.filter(h=>h.e===id);
+  let hourlyHtml=hourlyAct.map(e=>{const rows=d.hourly.filter(h=>h.e===e.id);const r=rateAt(e.rates,date)||0;const yr=yHrs(e.id);
+    const yTxt=yr.length?yr.map(h=>(h.s&&h.t?h.s+" ← "+h.t:fmt(hourlyHours(h),2)+" س")+(n0(h.dh)?" − "+fmt(h.dh,2):"")).join(" ، "):"لم تعمل";
+    const list=(rows.length?rows:[{e:e.id,_src:"new",_i:-1}]).map(h=>{const hrs=hourlyHours(h);const ro2=h._src==="new"?ro:rro(h);const bad=hrs>14||hrs<0;
+      return`<div class="hrow">
+        <label class="f">البدء<input type="time" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="s" value="${esc(h.s||"")}"${ro2}></label>
+        <label class="f">الانتهاء<input type="time" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="t" value="${esc(h.t||"")}"${ro2}></label>
+        <label class="f">خصم (س)<input inputmode="decimal" placeholder="0.5" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="dh" value="${esc(h.dh??"")}"${ro2}></label>
+        <label class="f dr">سبب الخصم<input ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="dr" value="${esc(h.dr||"")}"${ro2}></label>
+        <div class="net${bad?" bad":""}" data-hrs-box>صافى <span class="num" data-hrs>${fmt(hrs,2)}</span> س${bad?' <span class="wtag">⚠ راجع</span>':""} ${byTag(h)}${h._src!=="new"&&canRow(h)?` <button type="button" class="link" data-del="hourly" ${srcAttrs(h)}>حذف</button>`:""}</div>
+        ${n0(h.h)?`<label class="f">ساعات مباشرة<input inputmode="decimal" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="h" value="${esc(h.h??"")}"${ro2}></label>`:""}</div>`}).join("");
+    return`<div class="item ${rows.length?"on":""}"><div class="hd"><b>${esc(e.name)}</b><span class="muted small">${esc(supName(e.sup))} · ${r?fmt(r)+" ج/س":"<span style='color:var(--bad)'>بدون سعر</span>"}</span>${edit?`<span style="margin-inline-start:auto;display:flex;gap:4px">${yr.length&&!rows.length?`<button type="button" class="btn sm" data-likey="${e.id}">زى أمس</button>`:""}<button type="button" class="btn sm" data-addshift="${e.id}">+ وردية</button></span>`:""}</div><div class="yhint">أمس: ${esc(yTxt)}</div>${list}</div>`}).join("")||'<div class="empty">لا توجد معدات بالساعة نشطة. أضفها من الإعدادات.</div>';
   // monthly & workers exceptions
   const exLine=(it,key,sub)=>{const x=d[key].find(z=>z.id===it.id)||{};const k=x.k||"";const lock=!edit;
     const btns=isFri?`<button type="button" class="w" data-ex="${key}" data-id="${it.id}" data-k="" aria-pressed="${k!=="fri"}">إجازة الجمعة</button><button type="button" data-ex="${key}" data-id="${it.id}" data-k="fri" aria-pressed="${k==="fri"}">اشتغل (يوم إضافي)</button>`:
@@ -558,7 +579,7 @@ function renderDay(main){
     return`<div class="item"><div class="hd"><b>${esc(s?s.name:"بدون مورد – حدده من الإعدادات")}</b><span class="muted small">${r?"سعر المورد "+fmt(r,2)+" ج/م³":""}${miss?" <span style='color:var(--bad)'>توجد سيارة بدون سعر متر</span>":""}</span></div>${ts.map(t=>{const rows=d.trk.filter(x=>x.t===t.id);const tot=rows.reduce((a,x)=>a+n0(x.n),0);
       const editable=rows.find(x=>x._src==="day")||{t:t.id,_src:"new",_i:-1};const others=rows.filter(x=>x!==editable);
       return`<div class="line"><div class="nm"><b>سيارة ${esc(t.plate)}</b><small>السعة ${fmt(t.cap,2)} م³ · ${fmt(truckRate(t,date),2)} ج/م³</small></div>
-        <label class="f" style="width:110px">عدد النقلات<input inputmode="numeric" ${srcAttrs(editable)} data-arr="trk" data-t="${t.id}" data-k="n" value="${esc(editable.n??"")}"${ro}></label>
+        <label class="f" style="width:110px">عدد النقلات<input inputmode="numeric" ${srcAttrs(editable)} data-arr="trk" data-t="${t.id}" data-k="n" value="${esc(editable.n??"")}"${ro}></label><span class="yhint">أمس: ${fmt(yd.trk.filter(x=>x.t===t.id).reduce((a,x)=>a+n0(x.n),0))}</span>${WARN.trk[t.id]?`<span class="wtag">⚠ ${esc(WARN.trk[t.id])}</span>`:""}
         ${others.map(o=>`<span class="pill">${fmt(o.n)} نقلة ${byTag(o)}</span>`).join("")}
         <span class="small muted num" data-trk="${t.id}">${tot?`${fmt(tot*n0(t.cap),2)} م³ = ${money(tot*n0(t.cap)*truckRate(t,date))} ج`:""}</span></div>`}).join("")}</div>`}).join("")||'<div class="empty">لا توجد سيارات نقل نشطة. أضفها من الإعدادات.</div>';
   const itemsAct=(m.items||[]).filter(it=>isActive(it,date)||d.itm.some(x=>x.i===it.id));
@@ -571,21 +592,24 @@ function renderDay(main){
   // generic list sections
   const eqOpts=[...m.monthly,...m.hourly].map(e=>[e.id,e.name]);
   const accOpts=[...m.suppliers.map(s=>["sup:"+s.id,s.name+" ("+(SUPTYPE[s.type]||"")+")"]),...m.workers.map(w=>["wrk:"+w.id,w.name+" (عامل)"])];
-  const listSec=(arr,fields)=>{const rows=d[arr];return rows.map(r=>`<div class="item">${canRow(r)?`<button type="button" class="x" data-del="${arr}" ${srcAttrs(r)} aria-label="حذف">×</button>`:""}<div class="g">${fields(r)}</div>${byTag(r)}</div>`).join("")+(canAdd(arr)?`<button type="button" class="add" data-addrow="${arr}">+ إضافة</button>`:"")};
+  const listSec=(arr,fields,head="")=>{const rows=d[arr];return head+rows.map(r=>`<div class="item">${canRow(r)?`<button type="button" class="x" data-del="${arr}" ${srcAttrs(r)} aria-label="حذف">×</button>`:""}<div class="g">${fields(r)}</div>${byTag(r)}</div>`).join("")+(canAdd(arr)?`<button type="button" class="add" data-addrow="${arr}">+ إضافة</button>`:"")};
   const I=(r,arr,k,label,extra="")=>`<label class="f">${label}<input ${srcAttrs(r)} data-arr="${arr}" data-k="${k}" value="${esc(r[k]??"")}"${canRow(r)?"":" disabled"} ${extra}></label>`;
   const SEL=(r,arr,k,label,list,blank)=>`<label class="f">${label}<select ${srcAttrs(r)} data-arr="${arr}" data-k="${k}"${canRow(r)?"":" disabled"}>${opts(list,r[k],blank)}</select></label>`;
   const dprice=rateAt(m.dieselPrices,date);
   const dslHtml=`<div class="small muted" style="margin-bottom:6px">سعر اللتر: ${dprice?fmt(dprice,2)+" ج":"<b style='color:var(--bad)'>غير محدد – أدخله من الإعدادات</b>"}</div>`+listSec("dsl",r=>SEL(r,"dsl","e","المعدة",eqOpts,"أخرى / مولد")+I(r,"dsl","l","عدد اللترات",'inputmode="decimal"')+I(r,"dsl","a","أو المبلغ مباشرة",'inputmode="decimal"')+I(r,"dsl","n","ملاحظة")+`<div class="small muted" style="align-self:end">= <b class="num" data-dslv>${money(dieselAmount(r,date))}</b> ج</div>`);
-  const expHtml=listSec("exp",r=>I(r,"exp","d","البيان")+SEL(r,"exp","c","التصنيف",m.cats)+I(r,"exp","a","المبلغ",'inputmode="decimal"')+SEL(r,"exp","m","طريقة السداد",METHODS,false)+I(r,"exp","rc","رقم الإيصال"));
-  const payHtml=listSec("pay",r=>SEL(r,"pay","acc","الحساب",accOpts)+I(r,"pay","a","المبلغ",'inputmode="decimal"')+SEL(r,"pay","m","طريقة السداد",METHODS,false)+I(r,"pay","n","ملاحظة"));
+  const expHtml=listSec("exp",r=>I(r,"exp","d","البيان")+SEL(r,"exp","c","التصنيف",m.cats)+I(r,"exp","a","المبلغ",'inputmode="decimal"')+SEL(r,"exp","m","طريقة السداد",METHODS,false)+I(r,"exp","rc","رقم الإيصال")+(n0(r.a)>=50000?'<div class="balinfo"><span class="wtag">⚠ مبلغ كبير – تأكد من الرقم</span></div>':""));
+  const recent=recentPayees(date);const chips=edit&&recent.length?`<div class="chipbar"><span class="small muted" style="align-self:center">دفع سريع:</span>${recent.map(k=>{const a=CP.acc[k];return a?`<button type="button" data-quickpay="${esc(k)}">${esc(a.name)}</button>`:""}).join("")}</div>`:"";
+  const balTxt=r=>{const a=CP.acc[r.acc];if(!a)return"";const before=a.bal+n0(r.a);const over=n0(r.a)>Math.max(0,before)+0.5;
+    return`<div class="balinfo">${before>=0?`مستحق له قبل هذه الدفعة: <b class="num">${money(before)}</b> ج`:`مدفوع له زيادة: <b class="num">${money(-before)}</b> ج`}${over?' <span class="wtag">⚠ الدفعة أكبر من المستحق</span>':""}</div>`};
+  const payHtml=listSec("pay",r=>SEL(r,"pay","acc","الحساب",accOpts)+I(r,"pay","a","المبلغ",'inputmode="decimal"')+SEL(r,"pay","m","طريقة السداد",METHODS,false)+I(r,"pay","n","ملاحظة")+balTxt(r),chips);
   const advHtml=listSec("adv",r=>SEL(r,"adv","w","العامل",m.workers.map(w=>[w.id,w.name]),"شخص آخر")+(r.w?"":I(r,"adv","nm","الاسم"))+I(r,"adv","a","المبلغ",'inputmode="decimal"')+SEL(r,"adv","m","طريقة السداد",METHODS,false)+I(r,"adv","n","ملاحظة"));
   const geoHtml=listSec("geo",r=>SEL(r,"geo","c","المقاول",m.suppliers.filter(s=>s.type==="contractor").map(s=>[s.id,s.name]))+I(r,"geo","d","البيان (طبقة / محطات)")+I(r,"geo","q","الكمية",'inputmode="decimal"')+I(r,"geo","sv","اعتماد المساح"));
   const incHtml=listSec("inc",r=>SEL(r,"inc","src","المصدر",[["partner","شريك"],["mst","مستخلص من الهيئة"],["other","إيراد آخر"]],false)+(r.src==="mst"?I(r,"inc","no","رقم المستخلص")+I(r,"inc","per","الفترة")+I(r,"inc","g","القيمة الإجمالية",'inputmode="decimal"')+I(r,"inc","ded","الاستقطاعات",'inputmode="decimal"'):r.src==="other"?"":SEL(r,"inc","p","الشريك",m.partners.map(p=>[p.id,p.name])))+I(r,"inc","a",r.src==="mst"?"الصافى المحصّل":"المبلغ",'inputmode="decimal"')+SEL(r,"inc","m","الطريقة",METHODS,false)+I(r,"inc","ch","رقم الشيك")+I(r,"inc","n","ملاحظة"));
   const adjHtml=listSec("adj",r=>SEL(r,"adj","acc","الحساب",accOpts)+SEL(r,"adj","k","النوع",[["work","أعمال / مستحق (+)"],["deduct","خصم على المورد (−)"]],false)+I(r,"adj","a","المبلغ",'inputmode="decimal"')+I(r,"adj","n","البيان"));
   const sec=(id,title,hint,body,tot,open)=>`<details class="sec" ${open?"open":""}><summary><span class="chev"></span><h3>${title} <span class="muted small" style="font-weight:400">${hint}</span></h3><span class="tot" data-tot="${tot||""}"></span></summary><div class="sb">${body}</div></details>`;
-  main.innerHTML=`<div class="daybar"><button class="btn" data-dnav="-1" aria-label="اليوم السابق">›</button><input type="date" id="dayDate" value="${date}"><button class="btn" data-dnav="1" aria-label="اليوم التالى">‹</button><b>${DAYN[dow(date)]}</b>${isFri?'<span class="pill warn">جمعة</span>':""}${dow(date)===4?'<span class="pill">الخميس حتى 12 ظهرًا</span>':""}<span class="pill ${st==="closed"?"ok":st==="open"?"warn":""}">${st==="closed"?"مقفولة":st==="open"?"مفتوحة":"جديدة"}</span>${sealedInfo}<button class="btn sm" data-dnav="today" style="margin-inline-start:auto">اليوم</button></div>
+  main.innerHTML=`<div class="daybar"><button class="btn" data-dnav="-1" aria-label="اليوم السابق">›</button><input type="date" id="dayDate" value="${date}"><button class="btn" data-dnav="1" aria-label="اليوم التالى">‹</button><b>${DAYN[dow(date)]}</b>${isFri?'<span class="pill warn">جمعة</span>':""}${dow(date)===4?'<span class="pill">الخميس حتى 12 ظهرًا</span>':""}<span class="pill ${st==="closed"?"ok":st==="open"?"warn":""}">${st==="closed"?"مقفولة":st==="open"?"مفتوحة":"جديدة"}</span>${sealedInfo}<button class="btn sm" data-dnav="today" style="margin-inline-start:auto">اليوم</button>${edit?`<button class="btn sm" data-copyday="1">📋 انسخ يومية أمس</button>`:""}</div>
   ${banner}<form id="dayForm">
-  ${sec("h","معدات بالساعة","البدء والانتهاء والخصم",hourlyHtml+(edit&&hourlyAct.length?`<button type="button" class="btn sm" data-copyy="1">نسخ أوقات الأمس</button>`:""),"hourly",true)}
+  ${sec("h","معدات بالساعة","البدء والانتهاء والخصم",(edit&&hourlyAct.length?`<button type="button" class="btn sm gold" data-copyy="1" style="margin-bottom:8px">⚡ املأ كل المعدات بمواعيد أمس</button>`:"")+hourlyHtml,"hourly",true)}
   ${sec("m","معدات إيجار شهرى","تُحسب تلقائيًا – أدخل العطل أو الإضافى فقط",monthlyHtml,"",true)}
   ${sec("t","سيارات النقل","عدد النقلات × السعة × سعر المتر",trucksHtml,"trk",true)}
   ${sec("b","بنود بالعدد","مياه وتوريدات وخدمات – العدد × سعر الوحدة",itemsHtml,"itm",true)}
@@ -604,13 +628,32 @@ function renderDay(main){
   const foot=$("#foot");foot.hidden=false;
   const acts=[];
   if((edit||aOpen)&&st!=="closed")acts.push(`<button class="btn pri" data-day="close">إقفال اليومية</button>`);
-  if(S.role==="accountant")acts.push(`<button class="btn" data-day="request">طلب تعديل</button>`);
+  if(st==="closed"&&S.role==="accountant")acts.push(`<button class="btn" data-day="request">طلب تعديل</button>`);
   if(st==="closed"&&isOwner())acts.push(`<button class="btn" data-day="reopen">فتح للتعديل</button>`);
   if(st==="closed"&&isOwner()&&!day.approved)acts.push(`<button class="btn gold" data-day="approve">اعتماد</button>`);
   acts.push(`<button class="btn" data-day="pdf">تقرير PDF</button><button class="btn" data-day="wa">ملخص واتساب</button>`);
   foot.innerHTML=`<div class="foot-in"><span class="small"><span class="dot" id="saveDot"></span> <span id="saveTxt">${edit?"جاهز":"للعرض فقط"}</span></span><span class="small" id="dayTot"></span><div class="row" style="margin-inline-start:auto">${acts.join("")}</div></div>`;
   updateDayTotals();
+  main.querySelectorAll("#dayForm input").forEach(i=>{i.enterKeyHint="next"});
 }
+function recentPayees(date){const seen=[];Object.keys(S.days).filter(d=>d<date).sort().reverse().some(d=>{(S.days[d].pay||[]).slice().reverse().forEach(x=>{if(x.acc&&n0(x.a)&&!seen.includes(x.acc))seen.push(x.acc)});return seen.length>=8});return seen.slice(0,8)}
+function dayWarnings(date,CP){const m=M(),d=mergedDay(date,true),out={list:[],trk:{}};
+  d.hourly.forEach(h=>{const e=byId(m.hourly,h.e);const hrs=hourlyHours(h);if(e&&(hrs>14||hrs<0))out.list.push(`${e.name}: ${fmt(hrs,2)} ساعة – رقم غير معتاد`);if(e&&n0(h.dh)&&!String(h.dr||"").trim())out.list.push(`${e.name}: خصم بدون سبب`)});
+  const hist={};for(let i=1;i<=10;i++){const pd=addDays(date,-i);const day=S.days[pd];if(!day)continue;(day.trk||[]).forEach(x=>{(hist[x.t]=hist[x.t]||[]).push(n0(x.n))})}
+  const tl={};d.trk.forEach(x=>{tl[x.t]=(tl[x.t]||0)+n0(x.n)});
+  Object.entries(tl).forEach(([id,n])=>{const h=(hist[id]||[]).filter(v=>v>0);if(!h.length||!n)return;const avg=h.reduce((a,b)=>a+b,0)/h.length;if(n>Math.max(avg*1.8,avg+15)){const t=byId(m.trucks,id);out.trk[id]=`أعلى من المعتاد (متوسط ${fmt(avg,0)})`;out.list.push(`سيارة ${t?t.plate:""}: ${fmt(n)} نقلة – أعلى من المعتاد (متوسط ${fmt(avg,0)})`)}});
+  if(CP)d.pay.forEach(x=>{const a=CP.acc[x.acc];if(!a||!n0(x.a))return;const before=a.bal+n0(x.a);if(n0(x.a)>Math.max(0,before)+0.5)out.list.push(`دفعة ${money(n0(x.a))} لـ ${a.name} أكبر من المستحق (${money(Math.max(0,before))})`)});
+  d.exp.forEach(x=>{if(n0(x.a)>=50000)out.list.push(`مصروف كبير: ${x.d||""} ${money(n0(x.a))}`)});
+  return out}
+function closeSummary(date){const m=M(),d=mergedDay(date,true),y=mergedDay(addDays(date,-1),false);const rows=[];
+  const hh=(day,id)=>day.hourly.filter(h=>h.e===id).reduce((a,h)=>a+hourlyHours(h),0);
+  m.hourly.forEach(e=>{const a=hh(d,e.id),b=hh(y,e.id);if(a||b)rows.push([e.name+" (ساعات)",fmt(a,2),fmt(b,2),a&&b&&Math.abs(a-b)>=3]) });
+  const tl=day=>day.trk.reduce((a,x)=>a+n0(x.n),0);const ta=tl(d),tb=tl(y);if(ta||tb)rows.push(["النقلات (إجمالى)",fmt(ta),fmt(tb),tb&&ta>tb*1.5]);
+  m.items.forEach(it=>{const f=day=>day.itm.filter(x=>x.i===it.id).reduce((a,x)=>a+n0(x.n),0);const a=f(d),b=f(y);if(a||b)rows.push([it.name,fmt(a,2),fmt(b,2),false])});
+  const off=day=>day.wex.filter(x=>x.k==="off").length;if(off(d)||off(y))rows.push(["غياب العمالة",off(d),off(y),false]);
+  const sum=(day,k)=>day[k].reduce((a,x)=>a+n0(x.a),0);[["exp","المصروفات"],["pay","الدفعات"],["adv","السلف"]].forEach(([k,l])=>{const a=sum(d,k),b=sum(y,k);if(a||b)rows.push([l,money(a),money(b),false])});
+  const W=dayWarnings(date,compute(date)).list;
+  return`${rows.length?`<table class="cmp" style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:start">البند</th><th>اليوم</th><th>أمس</th></tr></thead><tbody>${rows.map(r=>`<tr${r[3]?' style="background:var(--goldbg)"':""}><td>${esc(r[0])}</td><td class="num">${r[1]}</td><td class="num muted">${r[2]}</td></tr>`).join("")}</tbody></table>`:""}${W.length?`<div class="alert warn" style="margin-top:8px"><b>راجع قبل الإقفال:</b><br>${W.map(esc).join("<br>")}</div>`:""}`}
 /* day events */
 $("#main").addEventListener("input",e=>{
   if(S.tab!=="day"||!S.cur)return;const t=e.target;
@@ -620,16 +663,17 @@ $("#main").addEventListener("input",e=>{
   if(!t.dataset.arr)return;
   const arr=t.dataset.arr,k=t.dataset.k;let src=t.dataset.src,i=+t.dataset.i;
   if(src==="new"){const row=arr==="hourly"?{e:t.dataset.e}:arr==="trk"?{t:t.dataset.t}:arr==="itm"?{i:t.dataset.it}:{};S.cur[arr].push(row);i=S.cur[arr].length-1;src="day";
-    t.closest(".g,.line").querySelectorAll("[data-src=new]").forEach(x=>{x.dataset.src="day";x.dataset.i=i})}
+    t.closest(".hrow,.g,.line").querySelectorAll("[data-src=new]").forEach(x=>{x.dataset.src="day";x.dataset.i=i})}
   const target=src==="day"?S.cur[arr][i]:(S.entries[src.slice(4)]||{})[arr]?.[i];if(!target)return;
   target[k]=t.value;
-  if(arr==="hourly"){const box=t.closest(".g");const hb=box&&box.querySelector("[data-hrs]");if(hb)hb.textContent=fmt(hourlyHours(target),2)}
+  if(arr==="hourly"){const box=t.closest(".hrow,.g");const hb=box&&box.querySelector("[data-hrs]");if(hb){const v=hourlyHours(target);hb.textContent=fmt(v,2);const bx=box.querySelector("[data-hrs-box]");if(bx)bx.classList.toggle("bad",v>14||v<0)}}
   if(arr==="trk"){const tr=byId(M().trucks,target.t);const el=document.querySelector(`[data-trk="${target.t}"]`);if(tr&&el){const r=truckRate(tr,S.cur.date);const n=n0(target.n);el.textContent=n?`${fmt(n*n0(tr.cap),2)} م³ = ${money(n*n0(tr.cap)*r)} ج`:""}}
   if(arr==="itm"){const it=byId(M().items,target.i);const el=document.querySelector(`[data-itm="${target.i}"]`);if(it&&el){const n=n0(target.n);el.textContent=n?money(n*itemRate(it,S.cur.date))+" ج":""}}
   if(arr==="dsl"){const it=t.closest(".item");const v=it&&it.querySelector("[data-dslv]");if(v)v.textContent=money(dieselAmount(target,S.cur.date))}
   if(src==="day")markDirty();else{saveEntryDoc(src.slice(4));updateDayTotals()}
 });
-$("#main").addEventListener("change",e=>{if(S.tab!=="day")return;const t=e.target;if(t.tagName==="SELECT"&&t.dataset.arr&&["src","w","acc"].includes(t.dataset.k)){saveDay();render()}});
+$("#main").addEventListener("change",e=>{if(S.tab!=="day")return;const t=e.target;if((t.tagName==="SELECT"&&t.dataset.arr&&["src","w","acc"].includes(t.dataset.k))||(t.dataset.arr==="pay"&&t.dataset.k==="a")||(t.dataset.arr==="exp"&&t.dataset.k==="a")){saveDay();setTimeout(render,0)}});
+$("#main").addEventListener("keydown",e=>{if(S.tab!=="day"||e.key!=="Enter")return;const t=e.target;if(t.tagName!=="INPUT"||!t.closest("#dayForm"))return;e.preventDefault();const all=[...document.querySelectorAll("#dayForm input:not([disabled]),#dayForm select:not([disabled])")].filter(x=>x.offsetParent!==null);const i=all.indexOf(t);if(i>=0&&all[i+1])all[i+1].focus();else t.blur()});
 function setEx(key,id,patch){
   const ents=entryDocsFor(S.cur.date);for(const[eid,e]of ents){const r=(e[key]||[]).find(z=>z.id===id);if(r){Object.assign(r,patch);saveEntryDoc(eid);return}}
   let r=S.cur[key].find(z=>z.id===id);if(!r){r={id};S.cur[key].push(r)}Object.assign(r,patch);
@@ -643,14 +687,27 @@ $("#main").addEventListener("click",async e=>{
   if(b.dataset.addrow){const a=b.dataset.addrow;const blank={dsl:{},exp:{m:"نقدى",c:""},pay:{m:"نقدى"},adv:{m:"نقدى"},geo:{},inc:{src:"partner",m:"نقدى"},adj:{k:"work"}}[a]||{};if(!canEditDay(S.cur.date)){if(!accOpen(S.cur.date))return;const id=safe(S.cur.date+"_"+S.uid);const doc=clone(S.entries[id]||{date:S.cur.date,by:S.uid});ARR.forEach(k=>{if(!Array.isArray(doc[k]))doc[k]=[]});doc[a].push(blank);S.entries[id]=doc;render();try{await put("entries/"+id,doc)}catch(x){toast("تعذر الحفظ: "+errMsg(x))}return}S.cur[a].push(blank);markDirty();render();return}
   if(b.dataset.del){const arr=b.dataset.del,src=b.dataset.src,i=+b.dataset.i;const ok=await modal({title:"حذف السطر",body:"<p>هل تريد حذف هذا السطر من اليومية؟</p>",ok:"حذف",danger:true});if(!ok)return;
     if(src==="day"){S.cur[arr].splice(i,1);markDirty()}else{const id=src.slice(4);S.entries[id][arr].splice(i,1);await put("entries/"+id,S.entries[id])}render();return}
-  if(b.dataset.copyy){const y=mergedDay(addDays(S.cur.date,-1),false);let n=0;y.hourly.forEach(h=>{if(!S.cur.hourly.some(x=>x.e===h.e)&&(h.s||h.t)){S.cur.hourly.push({e:h.e,s:h.s||"",t:h.t||""});n++}});if(n){markDirty();render();toast("تم نسخ أوقات "+n+" معدة من الأمس")}else toast("لا توجد أوقات بالأمس للنسخ");return}
+  if(b.dataset.copyy){if(!canEditDay(S.cur.date))return;const n=copyHourly(null);if(n){markDirty();render();toast("تم ملء مواعيد "+n+" معدة من الأمس – عدّل المختلف")}else toast("لا توجد مواعيد بالأمس للنسخ أو المعدات مسجلة بالفعل");return}
+  if(b.dataset.likey){if(!canEditDay(S.cur.date))return;const n=copyHourly(b.dataset.likey);if(n){markDirty();render()}return}
+  if(b.dataset.quickpay){if(!canEditDay(S.cur.date))return;S.cur.pay.push({acc:b.dataset.quickpay,m:"نقدى"});markDirty();render();const ins=[...document.querySelectorAll('#dayForm input[data-arr="pay"][data-k="a"]')];const last=ins[ins.length-1];if(last){last.closest("details").open=true;last.focus()}return}
+  if(b.dataset.copyday){if(!canEditDay(S.cur.date))return;const y=mergedDay(addDays(S.cur.date,-1),false);
+    const hasRows=y.hourly.length||y.mex.length||y.wex.length||y.trk.length||y.itm.length;if(!hasRows){toast("لا توجد بيانات أمس للنسخ");return}
+    const ok=await modal({title:"نسخ يومية أمس",body:`<p>سيتم نسخ ما لم يُسجل اليوم بعد من يومية ${dd(addDays(S.cur.date,-1))}:</p><ul class="small"><li>مواعيد المعدات بالساعة (بدون الخصم)</li><li>العطل والإضافى للمعدات الشهرية</li><li>الغياب والإضافى للعمالة</li><li>عدد نقلات السيارات والبنود بالعدد</li></ul><p class="small muted">المصروفات والدفعات والسلف لا تُنسخ. راجع الأرقام وعدّل المختلف قبل الإقفال.</p>`,ok:"نسخ"});if(!ok)return;
+    let n=copyHourly(null);const cur=S.cur;
+    ["mex","wex"].forEach(k=>y[k].forEach(x=>{if(x.k==="fri")return;if(!cur[k].some(z=>z.id===x.id)&&(x.k||n0(x.ot))){const c={id:x.id};if(x.k)c.k=x.k;if(x.ot)c.ot=x.ot;if(x.r)c.r=x.r;cur[k].push(c);n++}}));
+    y.trk.forEach(x=>{if(n0(x.n)&&!cur.trk.some(z=>z.t===x.t)){cur.trk.push({t:x.t,n:x.n});n++}});
+    y.itm.forEach(x=>{if(n0(x.n)&&!cur.itm.some(z=>z.i===x.i)){cur.itm.push({i:x.i,n:x.n});n++}});
+    if(n){markDirty();render();toast("تم نسخ "+n+" سطر من يومية أمس – راجع وعدّل")}else toast("كل البنود مسجلة اليوم بالفعل");return}
   if(b.dataset.day)dayAction(b.dataset.day);
 });
 $("#foot").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(b&&S.cur)dayAction(b.dataset.day)});
+function copyHourly(only){const y=mergedDay(addDays(S.cur.date,-1),false);const m=M();let n=0;const done=new Set();
+  y.hourly.forEach(h=>{if(only&&h.e!==only)return;const e=byId(m.hourly,h.e);if(!e||!isActive(e,S.cur.date))return;if(S.cur.hourly.some(x=>x.e===h.e)&&!done.has(h.e))return;if(!(h.s||h.t||n0(h.h)))return;
+    const row={e:h.e};if(h.s)row.s=h.s;if(h.t)row.t=h.t;if(!h.s&&!h.t&&h.h)row.h=h.h;S.cur.hourly.push(row);done.add(h.e);n++});return n}
 async function dayAction(a){
   const date=S.cur.date;
   if(a==="close"){if(S.dirty)await saveDay();const t=dayTotals(date);
-    const ok=await modal({title:"إقفال يومية "+dd(date),body:`<p>أعمال اليوم: <b>${money(t.works)}</b> ج – منصرف من الخزنة: <b>${money(t.out)}</b> ج – وارد: <b>${money(t.inn)}</b> ج.</p><p class="small muted">بعد الإقفال لا يمكن التعديل إلا بموافقة المالك، وسيتم تجهيز تقرير PDF.</p>`,ok:"إقفال وتجهيز التقرير"});if(!ok)return;
+    const ok=await modal({title:"إقفال يومية "+dd(date),body:`<p>أعمال اليوم: <b>${money(t.works)}</b> ج – منصرف من الخزنة: <b>${money(t.out)}</b> ج – وارد: <b>${money(t.inn)}</b> ج.</p>${closeSummary(date)}<p class="small muted">بعد الإقفال لا يمكن التعديل إلا بموافقة المالك، وسيتم تجهيز تقرير PDF.</p>`,ok:"إقفال وتجهيز التقرير"});if(!ok)return;
     const day=normDay(clone(S.cur),date);day.status="closed";day.closedAt=new Date().toISOString();day.closedBy=S.uid||"";logAct(day,"إقفال اليومية");
     try{await put("days/"+date,day);S.cur=day;toast("تم إقفال اليومية");render();dailyPdf(date)}catch(e){toast("تعذر الإقفال")}}
   else if(a==="request"){await modal({title:"طلب تعديل يومية "+dd(date),body:`<label class="f">سبب التعديل المطلوب<textarea name="reason" required></textarea></label>`,ok:"إرسال الطلب",onOk:async v=>{if(!v.reason.trim())return"اكتب السبب";await put("requests/"+uid("r"),{date,reason:v.reason.trim(),by:S.uid||"",at:new Date().toISOString(),status:"pending"});toast("تم إرسال الطلب للمالك")}})}
@@ -887,7 +944,7 @@ function renderSettings(main){
 }
 async function saveMaster(m){try{await put("master/main",m);if(!S.local&&isOwner())await syncRoles(m);toast("تم الحفظ")}catch(e){toast("تعذر الحفظ: "+errMsg(e))}}
 function assignList(k,m){const key=ASSIGN[k][0];return key==="_eq"?[...m.monthly,...m.hourly]:(m[key]||[])}
-function permSummary(u,m){if(u.role==="accountant")return"يراجع كل شيء · يُدخل: "+((u.acc&&u.acc.length?u.acc:DEF_ACC).map(k=>ACC_PERMS[k]).join("، "));
+function permSummary(u,m){if(u.role==="accountant")return"يُدخل ويعدّل كل اليومية حتى الإقفال · يراجع كل الحسابات";
   return(u.perms||[]).map(p=>{const a=(u.assign||{})[p];if(!a||a==="*")return PERMS[p]+" (الكل)";const lab=ASSIGN[p][1];const list=assignList(p,m);return PERMS[p]+": "+a.map(id=>{const x=byId(list,id);return x?lab(x):""}).filter(Boolean).join("، ")}).join(" | ")||"—"}
 function buildView(u,m){const P=u.perms||[],A=u.assign||{};
   const pick=(list,k,f)=>{const a=A[k];return(list||[]).filter(x=>!a||a==="*"||(Array.isArray(a)&&a.includes(x.id))).map(x=>{const o={};f.forEach(z=>{if(x[z]!==undefined&&x[z]!==null)o[z]=x[z]});return o})};
@@ -909,16 +966,15 @@ function userForm(u,m,isNew){const t=todayStr();
    ${isNew?`<label class="f">اسم الدخول<input name="user" required dir="ltr" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="مثال: mohamed أو رقم موبايله"></label><label class="f">الرقم السرى (4–8 أرقام)<input name="pin" inputmode="numeric" required dir="ltr" value="${randPin()}"></label>`:`<label class="f">اسم الدخول<input value="${esc(u.username||"")}" disabled dir="ltr"></label>`}
    <label class="f">الدور<select name="role" data-role>${opts([["field","مشرف موقع – يُدخل ما يُحدد له فقط"],["accountant","المحاسب – يراجع كل شيء"]],u.role||"field",false)}</select></label></div>
    <div data-for-role="field" style="margin-top:10px"><b class="small">مسؤول عن إدخال: (اليوم والأمس فقط – بدون أسعار أو مبالغ)</b>${secs}</div>
-   <div data-for-role="accountant" style="margin-top:10px"><b class="small">مسؤول عن إدخال:</b>${accs}<p class="small muted">المحاسب يرى كل اليوميات والحسابات والتقارير للمراجعة، ويُدخل الأقسام المحددة فقط، ولا يعدّل إدخالات غيره. لأى تصحيح يرسل لك (طلب تعديل).</p></div>`}
+   <div data-for-role="accountant" style="margin-top:10px"><p class="small muted">المحاسب يُدخل ويعدّل كل أقسام اليومية (المعدات، السيارات، العمالة، السولار، المصروفات، الدفعات، السلف، الوارد) حتى إقفال اليوم، ويرى كل الحسابات والتقارير. بعد الإقفال لا تعديل إلا بموافقتك. قيود التسوية والإعدادات لك وحدك.</p></div>`}
 function ufInit(f){const sync=()=>{const r=f.querySelector("[data-role]").value;f.querySelectorAll("[data-for-role]").forEach(el=>{el.hidden=el.dataset.forRole!==r});
   Object.keys(PERMS).forEach(k=>{const p=f.querySelector(`[name="p_${k}"]`),l=f.querySelector(`[data-plist="${k}"]`),al=f.querySelector(`[name="all_${k}"]`),c=f.querySelector(`[data-chips="${k}"]`);if(l)l.hidden=!p.checked;if(c)c.hidden=al.checked})};
   f.addEventListener("change",sync);sync()}
 function readUserForm(v,u){u.name=(v.name||"").trim();u.role=v.role;
   if(u.role==="field"){u.perms=Object.keys(PERMS).filter(k=>v["p_"+k]);u.assign={};u.perms.forEach(k=>{if(v["all_"+k])u.assign[k]="*";else{const pre="a_"+k+"_";u.assign[k]=Object.keys(v).filter(x=>x.startsWith(pre)).map(x=>x.slice(pre.length))}});u.acc=[]}
-  else{u.acc=Object.keys(ACC_PERMS).filter(k=>v["c_"+k]);u.perms=[];u.assign={}}
+  else{u.acc=Object.keys(ACC_PERMS);u.perms=[];u.assign={}}
   if(!u.name)return"اكتب الاسم";
   if(u.role==="field"){if(!u.perms.length)return"اختر قسمًا واحدًا على الأقل";for(const k of u.perms)if(Array.isArray(u.assign[k])&&!u.assign[k].length)return"فى قسم ("+PERMS[k]+") اختر عنصرًا واحدًا على الأقل أو (الكل)"}
-  else if(!u.acc.length)return"اختر قسمًا واحدًا على الأقل للمحاسب";
   return null}
 async function createAuthUser(user,pin){const sec=firebase.apps.find(a=>a.name==="sec")||firebase.initializeApp(FB_CFG,"sec");const A=sec.auth();
   for(let g=1;g<=9;g++){try{const c=await A.createUserWithEmailAndPassword(mailOf(user,g),pinPw(pin));const id=c.user.uid;try{await A.signOut()}catch(e){}return{uid:id,email:mailOf(user,g)}}catch(x){if(x&&x.code==="auth/email-already-in-use")continue;throw x}}
