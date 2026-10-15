@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function ownerExists() { return exists(/databases/$(database)/documents/meta/owner); }
+    function isOwner() {
+      return signedIn() && ownerExists()
+        && get(/databases/$(database)/documents/meta/owner).data.uid == request.auth.uid;
+    }
+    function hasRole() {
+      return signedIn() && exists(/databases/$(database)/documents/roles/$(request.auth.uid));
+    }
+    function myRole() { return get(/databases/$(database)/documents/roles/$(request.auth.uid)).data; }
+    function activeRole(r) { return hasRole() && myRole().role == r && myRole().get('active', true) != false; }
+    function isAcc() { return activeRole('accountant'); }
+    function isField() { return activeRole('field'); }
+    function isMgr() { return isOwner() || isAcc(); }
+    function isMember() { return isOwner() || isAcc() || isField(); }
+    function dayClosed(d) {
+      return exists(/databases/$(database)/documents/dstat/$(d))
+        && get(/databases/$(database)/documents/dstat/$(d)).data.status == 'closed';
+    }
+    function same(k) { return request.resource.data.get(k, []) == resource.data.get(k, []); }
+    function emptyArr(k) { return request.resource.data.get(k, []).size() == 0; }
+    function sameContent() {
+      return same('hourly') && same('mex') && same('wex') && same('trk') && same('itm') && same('dsl')
+        && same('exp') && same('pay') && same('adv') && same('geo') && same('inc') && same('adj')
+        && request.resource.data.get('notes', '') == resource.data.get('notes', '')
+        && request.resource.data.get('approved', false) == resource.data.get('approved', false);
+    }
+    function emptyContent() {
+      return emptyArr('hourly') && emptyArr('mex') && emptyArr('wex') && emptyArr('trk') && emptyArr('itm')
+        && emptyArr('dsl') && emptyArr('exp') && emptyArr('pay') && emptyArr('adv') && emptyArr('geo')
+        && emptyArr('inc') && emptyArr('adj') && request.resource.data.get('approved', false) == false;
+    }
+
+    // owner record: readable before login (to know whether setup is needed); created once
+    match /meta/owner {
+      allow read: if true;
+      allow create: if signedIn() && !ownerExists() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+    // username -> login email map (no secrets inside)
+    match /logins/{name} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+    // per-user role, permissions, and the limited list of items a field user may see
+    match /roles/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow write: if isOwner();
+    }
+    match /master/{id} {
+      allow read: if isMgr();
+      allow write: if isOwner();
+    }
+    match /days/{d} {
+      allow read: if isMgr();
+      allow write: if isOwner();
+      // accountant may only close an open day, without changing its content
+      allow update: if isAcc() && request.resource.data.status == 'closed'
+        && resource.data.get('status', 'open') != 'closed' && sameContent();
+      allow create: if isAcc() && request.resource.data.status == 'closed' && emptyContent();
+    }
+    match /dstat/{d} {
+      allow read: if isMember();
+      allow write: if isOwner() || (isAcc() && request.resource.data.status == 'closed');
+    }
+    match /entries/{id} {
+      allow read: if isMgr() || (signedIn() && resource.data.by == request.auth.uid);
+      allow write: if isOwner();
+      allow create, update: if (isAcc() || isField())
+        && request.resource.data.by == request.auth.uid
+        && id == request.resource.data.date + '_' + request.auth.uid
+        && (resource == null || resource.data.by == request.auth.uid)
+        && !dayClosed(request.resource.data.date);
+    }
+    match /sealed/{d} {
+      allow read: if isMgr();
+      allow write: if isOwner();
+    }
+    match /requests/{id} {
+      allow read: if isOwner() || (signedIn() && resource.data.by == request.auth.uid);
+      allow create: if isMember() && request.resource.data.by == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update, delete: if isOwner();
+    }
+  }
+}
