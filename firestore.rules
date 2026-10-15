@@ -38,9 +38,14 @@ service cloud.firestore {
       allow read: if signedIn() && (request.auth.uid == uid || isOwner());
       allow write: if isOwner();
     }
+    // accountant may only ADD suppliers / equipment: existing entries must stay unchanged
+    function keeps(k) { return request.resource.data.get(k, []).hasAll(resource.data.get(k, [])); }
     match /master/{id} {
       allow read: if isMgr();
       allow write: if isOwner();
+      allow update: if isAcc()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suppliers', 'hourly', 'monthly', 'trucks', 'items'])
+        && keeps('suppliers') && keeps('hourly') && keeps('monthly') && keeps('trucks') && keeps('items');
     }
     match /days/{d} {
       allow read: if isMgr();
