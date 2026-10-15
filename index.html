@@ -125,6 +125,11 @@ details.sec[open] .chev{transform:rotate(135deg);margin-top:4px}
 .chipbar button{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
 .balinfo{grid-column:1/-1;font-size:12px}
 .cmp td,.cmp th{padding:3px 6px;font-size:13px;border-bottom:1px solid var(--line)}
+h3.st{font-size:15px;margin:14px 0 6px;color:var(--navy);border-bottom:3px solid var(--gold);padding-bottom:4px}
+table.xl th small{font-weight:400;opacity:.85}
+table.xl{min-width:0}table.xl th,table.xl td{padding:7px 6px}table.xl td.n,table.xl th.n{white-space:nowrap}
+table.fin{max-width:520px}table.fin td{font-size:15px}table.fin td.n{font-weight:700}
+@media(max-width:600px){table.xl th,table.xl td{font-size:12.5px;padding:6px 4px}table.xl small{font-size:11px}}
 .line:last-child{border-bottom:0}
 .line .nm{flex:1;min-width:120px}
 .line .nm small{display:block;color:var(--muted);font-size:12px}
@@ -781,6 +786,7 @@ $("#main").addEventListener("click",e=>{if(S.tab!=="acc")return;const b=e.target
   if(b.dataset.accf){S.accFilter=b.dataset.accf;render()}
   if(b.dataset.accopen){S.acc=b.dataset.accopen;S.accFrom="";S.accTo="";S.accEq="";S.accMon=null;render();window.scrollTo(0,0)}
   if(b.dataset.accback!==undefined){S.acc=null;render()}
+  if(b.dataset.ledger!==undefined){S.accLedger=b.dataset.ledger==="1";render()}
   if(b.dataset.stmt){statementAction(b.dataset.stmt)}});
 $("#main").addEventListener("change",e=>{if(S.tab!=="acc")return;const t=e.target;if(t.id==="sMon"){S.accMon=t.value;render()}if(t.id==="sFrom"){S.accFrom=t.value;render()}if(t.id==="sTo"){S.accTo=t.value;render()}if(t.id==="sEq"){S.accEq=t.value;render()}});
 function eqOptionsFor(a){const m=M();if(a.kind!=="sup")return[];const id=a.meta.id;return[...m.hourly.filter(e=>e.sup===id).map(e=>["h:"+e.id,e.name]),...m.monthly.filter(e=>e.sup===id).map(e=>["m:"+e.id,e.name]),...m.trucks.filter(t=>t.sup===id).map(t=>["t:"+t.id,"سيارة "+t.plate]),...(m.items||[]).filter(i=>i.sup===id).map(i=>["i:"+i.id,i.name])]}
@@ -798,13 +804,44 @@ function statementData(a){
   return{open,rows,work,paid,close:open+work-paid,qty,segs,adv,pays};
 }
 const qtyTxt=q=>Object.entries(q).map(([u,v])=>fmt(v,2)+" "+u).join(" + ")||"—";
+/* Excel-style statement: daily sheet (one column per machine/truck), summary qty × rate, payments, balance */
+function stmtModel(a,sd){const m=M();const L=sd.rows;
+  const eqName=k=>{const[t,id]=String(k||"").split(":");if(t==="h"){const e=byId(m.hourly,id);return e?e.name:"معدة"}if(t==="t"){const x=byId(m.trucks,id);return x?"سيارة "+x.plate:"سيارة"}if(t==="i"){const x=byId(m.items,id);return x?x.name:"بند"}if(t==="m"){const x=byId(m.monthly,id);return x?x.name:"معدة شهرية"}return""};
+  const dl=L.filter(l=>l.work&&l.q&&/^(h|t|i):/.test(l.eq||""));
+  const cols=[];dl.forEach(l=>{if(!cols.find(c=>c.k===l.eq)){const t=l.eq[0];const tr=t==="t"?byId(m.trucks,l.eq.slice(2)):null;cols.push({k:l.eq,name:eqName(l.eq),unit:t==="t"?"نقلة":l.u,cap:tr?n0(tr.cap):0,isT:t==="t"})}});
+  const dates=[...new Set(dl.map(l=>l.date))].sort();
+  const grid=dates.map(d=>({d,v:cols.map(c=>dl.filter(l=>l.date===d&&l.eq===c.k).reduce((s,l)=>s+(c.isT?n0(l.nl):l.q),0))}));
+  const tot=cols.map((c,i)=>grid.reduce((s,r)=>s+r.v[i],0));
+  const sum=[];cols.forEach((c,i)=>{const ls=dl.filter(l=>l.eq===c.k);const q=ls.reduce((s,l)=>s+l.q,0),w=ls.reduce((s,l)=>s+l.work,0);const rs=[...new Set(ls.map(l=>l.r))];
+    sum.push({name:c.name,q,u:c.isT?"م³":c.unit,r:rs.length===1?rs[0]:(q?w/q:0),w,extra:c.isT?`${fmt(tot[i])} نقلة × ${fmt(c.cap,2)} م³`:""})});
+  L.filter(l=>l.work&&!dl.includes(l)).forEach(l=>sum.push({name:l.desc,q:l.q||0,u:l.u||"",r:l.r||0,w:l.work,extra:""}));
+  const pays=L.filter(l=>l.paid);const work=sum.reduce((s,x)=>s+x.w,0),paid=pays.reduce((s,l)=>s+l.paid,0);
+  return{cols,grid,tot,sum,pays,work,paid}}
+function renderStatementPro(main,a,sd,mons,eqs,wsum){const M_=stmtModel(a,sd);const mon=S.accMon;const per=mon?"شهر "+monLabel(mon):periodLabel();
+  const hdr=`<div class="daybar"><button class="btn sm" data-accback="">← كل الحسابات</button><h2 class="pt" style="margin:0">كشف حساب: ${esc(a.name)}</h2></div>
+  <div class="card g w"><label class="f">الشهر<select id="sMon">${opts([["","كل الفترة"],...mons.slice().reverse().map(m=>[m,"شهر "+monLabel(m)])],S.accMon,false)}</select></label>${S.accMon?"":`<label class="f">من تاريخ<input type="date" id="sFrom" value="${S.accFrom}"></label><label class="f">إلى تاريخ<input type="date" id="sTo" value="${S.accTo}"></label>`}${eqs.length?`<label class="f">المعدة / السيارة<select id="sEq">${opts(eqs,S.accEq,"كل المعدات والسيارات")}</select></label>`:""}
+    <div class="row" style="align-self:end;flex-wrap:wrap"><button class="btn gold" data-stmt="pdf">كشف PDF</button><button class="btn" data-stmt="xlsx">Excel</button><button class="btn" data-stmt="wa">واتساب</button><button class="btn sm" data-ledger="1">الدفتر التفصيلى</button></div></div>`;
+  const sheet=M_.cols.length?`<h3 class="st">سركى ${M_.cols.some(c=>c.isT)?"النقلات و":""}الساعات – ${esc(per)}</h3><div class="tw"><table class="xl"><thead><tr><th>التاريخ</th>${M_.cols.map(c=>`<th class="n">${esc(c.name)}<br><small>(${esc(c.unit||"")})</small></th>`).join("")}</tr></thead><tbody>
+    ${M_.grid.map(r=>`<tr><td class="num">${dd(r.d)}</td>${r.v.map(v=>`<td class="n">${v?fmt(v,2):""}</td>`).join("")}</tr>`).join("")}
+    <tr class="tot"><td>الإجمالى</td>${M_.tot.map((v,i)=>`<td class="n">${fmt(v,2)}</td>`).join("")}</tr>
+    ${M_.cols.some(c=>c.isT)?`<tr class="tot"><td>التكعيب (م³)</td>${M_.cols.map(c=>`<td class="n">${c.isT?fmt(c.cap,2):""}</td>`).join("")}</tr><tr class="tot"><td>الأمتار (م³)</td>${M_.cols.map((c,i)=>`<td class="n">${c.isT?fmt(M_.tot[i]*c.cap,2):""}</td>`).join("")}</tr>`:""}</tbody></table></div>`:"";
+  const summ=`<h3 class="st">الحساب الإجمالى</h3><div class="tw"><table class="xl"><thead><tr><th>البيان</th><th class="n">الكمية</th><th class="n">السعر</th><th class="n">إجمالى الأعمال</th></tr></thead><tbody>
+    ${M_.sum.map(x=>`<tr><td class="wrap">${esc(x.name)}${x.extra?`<br><small class="muted">${esc(x.extra)}</small>`:""}</td><td class="n">${x.q?fmt(x.q,2)+" "+esc(x.u):""}</td><td class="n">${x.r?fmt(x.r,2):""}</td><td class="n">${money(x.w)}</td></tr>`).join("")||'<tr><td colspan="4" class="empty">لا توجد أعمال فى هذه الفترة</td></tr>'}
+    <tr class="tot"><td colspan="3">إجمالى الأعمال</td><td class="n">${money(M_.work)}</td></tr></tbody></table></div>`;
+  const pays=`<h3 class="st">المبالغ المسددة</h3><div class="tw"><table class="xl"><thead><tr><th>تاريخ السداد</th><th class="n">المبلغ</th><th>البيان</th></tr></thead><tbody>
+    ${M_.pays.map(l=>`<tr><td class="num">${dd(l.date)}</td><td class="n">${money(l.paid)}</td><td class="wrap small">${esc(l.desc)}</td></tr>`).join("")||'<tr><td colspan="3" class="empty">لا توجد مدفوعات</td></tr>'}
+    <tr class="tot"><td>الإجمالى</td><td class="n">${money(M_.paid)}</td><td></td></tr></tbody></table></div>`;
+  const fin=`<div class="tw"><table class="xl fin"><tbody>${mon||sd.open?`<tr><td>${mon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة"}</td><td class="n">${money(sd.open)}</td></tr>`:""}<tr><td>+ إجمالى الأعمال</td><td class="n">${money(M_.work)}</td></tr><tr><td>− إجمالى المسدد</td><td class="n">${money(M_.paid)}</td></tr>
+    <tr class="tot"><td>${sd.close>=0?"المبالغ المستحقة":"دفعة مقدمة (لصالح الخزنة)"}${mon?" – تُرحّل للشهر التالى":""}</td><td class="n" style="color:${sd.close>0.5?"var(--bad)":"inherit"}">${money(Math.abs(sd.close))}</td></tr></tbody></table></div>`;
+  main.innerHTML=hdr+(wsum||"")+sheet+summ+pays+fin}
 function renderStatement(main,a){
   const mons=accMonths(a);if(S.accMon===undefined||S.accMon===null)S.accMon=a.kind==="par"?"":(mons[mons.length-1]||"");if(S.accMon&&!mons.includes(S.accMon))S.accMon=mons[mons.length-1]||"";
   const sd=statementData(a);const eqs=eqOptionsFor(a);
-  const par=a.kind==="par";const hasQ=!par&&sd.rows.some(l=>l.q);
+  const par=a.kind==="par";const hasQ=!par&&sd.rows.some(l=>l.q);const pro=!par&&!S.accLedger;
   const wsum=a.kind==="wrk"&&S.accMon&&sd.segs.length?(()=>{const g=sd.segs[0];const offV=g.off*g.daily+g.half*g.daily/2,dhV=g.dhH*g.ot,otV=g.otH*g.ot,friV=g.fri*g.daily;
     return`<div class="kpis"><div><small>الراتب الشهرى</small><strong>${money(g.rate)}</strong></div><div><small>أيام العمل</small><strong>${fmt(g.days,1)}</strong></div><div><small>خصم غياب ${g.off||g.half?`(${g.off} يوم${g.half?` + ${g.half} نصف`:""})`:""}</small><strong>${money(offV)}</strong></div><div><small>خصم ساعات (${fmt(g.dhH,2)} س)</small><strong>${money(dhV)}</strong></div><div><small>إضافى (${fmt(g.otH,2)} س)${g.fri?` + جمعة ${g.fri}`:""}</small><strong>${money(otV+friV)}</strong></div><div><small>السلف خلال الشهر</small><strong>${money(sd.adv)}</strong></div><div><small>مستحق الشهر</small><strong>${money(sd.work)}</strong></div><div><small>المتبقى</small><strong style="color:var(--bad)">${money(sd.close)}</strong></div></div>`})():"";
-  main.innerHTML=`<div class="daybar"><button class="btn sm" data-accback="">← كل الحسابات</button><h2 class="pt" style="margin:0">كشف حساب: ${esc(a.name)}</h2></div>
+  if(pro)return renderStatementPro(main,a,sd,mons,eqs,wsum);
+  main.innerHTML=`<div class="daybar"><button class="btn sm" data-accback="">← كل الحسابات</button><h2 class="pt" style="margin:0">كشف حساب: ${esc(a.name)}</h2>${par?"":'<button class="btn sm" data-ledger="0" style="margin-inline-start:auto">الكشف المختصر</button>'}</div>
   <div class="card g w"><label class="f">الشهر<select id="sMon">${opts([["","كل الفترة"],...mons.slice().reverse().map(m=>[m,"شهر "+monLabel(m)])],S.accMon,false)}</select></label>${S.accMon?"":`<label class="f">من تاريخ<input type="date" id="sFrom" value="${S.accFrom}"></label><label class="f">إلى تاريخ<input type="date" id="sTo" value="${S.accTo}"></label>`}${eqs.length?`<label class="f">المعدة / السيارة<select id="sEq">${opts(eqs,S.accEq,"كل المعدات والسيارات")}</select></label>`:""}
     <div class="row" style="align-self:end"><button class="btn gold" data-stmt="pdf">كشف PDF</button><button class="btn" data-stmt="xlsx">Excel</button><button class="btn" data-stmt="wa">ملخص واتساب</button></div></div>
   ${S.accMon?`<div class="small muted" style="margin:-4px 0 8px">كشف شهر ${monLabel(S.accMon)}: الرصيد المرحّل من الشهور السابقة + أعمال ودفعات الشهر (كل دفعة على الشهر الذى تسدده). الرصيد آخر الشهر يُرحّل للشهر التالى.</div>`:""}
@@ -858,6 +895,23 @@ async function statementAction(kind){
   const a=c.acc[S.acc];if(!a)return;const sd=statementData(a);const eqName=S.accEq?(eqOptionsFor(a).find(x=>x[0]===S.accEq)||[])[1]:"";
   const title="كشف حساب: "+a.name+(eqName?" – "+eqName:"");
   const hasQ=a.kind!=="par"&&sd.rows.some(l=>l.q);const openL=S.accMon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة";const closeL=S.accMon?"الرصيد آخر الشهر – يُرحّل":(sd.close>=0?"المستحق له":"دفعة مقدمة");
+  if(kind==="pdf"&&a.kind!=="par"&&!S.accLedger){const X=stmtModel(a,sd);const blocks=[];const nc=X.cols.length;
+    if(a.kind==="wrk"&&S.accMon&&sd.segs.length){const g=sd.segs[0];blocks.push({type:"table",title:"ملخص الراتب",cols:[["الراتب",.15],["أيام العمل",.12],["خصم غياب",.15],["خصم ساعات",.15],["إضافى",.13],["السلف",.15],["المتبقى",.15]],rows:[[money(g.rate),fmt(g.days,1),money(g.off*g.daily+g.half*g.daily/2),money(g.dhH*g.ot),money(g.otH*g.ot+g.fri*g.daily),money(sd.adv),money(sd.close)]]})}
+    if(nc){const dw=.16,cw=(1-dw)/nc;const totals=[["الإجمالى",...X.tot.map(v=>fmt(v,2))]];if(X.cols.some(c=>c.isT)){totals.push(["التكعيب م³",...X.cols.map(c=>c.isT?fmt(c.cap,2):"")]);totals.push(["الأمتار م³",...X.cols.map((c,i)=>c.isT?fmt(X.tot[i]*c.cap,2):"")])}
+      blocks.push({type:"table",title:"سركى "+(X.cols.some(c=>c.isT)?"النقلات و":"")+"الساعات",cols:[["التاريخ",dw],...X.cols.map(c=>[c.name+" ("+(c.unit||"")+")",cw])],rows:X.grid.map(r=>[dd(r.d),...r.v.map(v=>v?fmt(v,2):"")]),totals})}
+    blocks.push({type:"table",title:"الحساب الإجمالى",cols:[["البيان",.46],["الكمية",.18],["السعر",.14],["إجمالى الأعمال",.22]],rows:X.sum.map(x=>[x.name+(x.extra?" – "+x.extra:""),x.q?fmt(x.q,2)+" "+x.u:"",x.r?fmt(x.r,2):"",money(x.w)]),total:["إجمالى الأعمال","","",money(X.work)]});
+    blocks.push({type:"table",title:"المبالغ المسددة",cols:[["تاريخ السداد",.22],["المبلغ",.22],["البيان",.56]],rows:X.pays.map(l=>[dd(l.date),money(l.paid),l.desc]),total:["الإجمالى",money(X.paid),""]});
+    const fin=[];if(S.accMon||sd.open)fin.push([S.accMon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة",money(sd.open)]);fin.push(["+ إجمالى الأعمال",money(X.work)],["− إجمالى المسدد",money(X.paid)]);
+    blocks.push({type:"table",title:"الموقف",cols:[["البيان",.6],["المبلغ",.4]],rows:fin,total:[(sd.close>=0?"المبالغ المستحقة":"دفعة مقدمة")+(S.accMon?" – تُرحّل للشهر التالى":""),money(Math.abs(sd.close))]});
+    blocks.push({type:"sign",items:["توقيع المورد / المستلم","المحاسب","المالك"]});
+    return makePdf(title,periodLabel(),blocks,safe("كشف_حساب_"+a.name+(S.accMon?"_"+S.accMon:""))+".pdf")}
+  if(kind==="xlsx"&&a.kind!=="par"&&!S.accLedger){if(typeof XLSX==="undefined")return toast("مكتبة Excel لم تُحمّل");const X=stmtModel(a,sd);const aoa=[[title],[periodLabel()],[]];
+    if(X.cols.length){aoa.push(["سركى الساعات / النقلات"]);aoa.push(["التاريخ",...X.cols.map(c=>c.name+" ("+(c.unit||"")+")")]);X.grid.forEach(r=>aoa.push([dd(r.d),...r.v.map(v=>v?r2(v):"")]));aoa.push(["الإجمالى",...X.tot.map(r2)]);
+      if(X.cols.some(c=>c.isT)){aoa.push(["التكعيب م³",...X.cols.map(c=>c.isT?c.cap:"")]);aoa.push(["الأمتار م³",...X.cols.map((c,i)=>c.isT?r2(X.tot[i]*c.cap):"")])}aoa.push([])}
+    aoa.push(["الحساب الإجمالى"],["البيان","الكمية","الوحدة","السعر","إجمالى الأعمال"]);X.sum.forEach(x=>aoa.push([x.name+(x.extra?" – "+x.extra:""),x.q?r2(x.q):"",x.q?x.u:"",x.r?r2(x.r):"",r2(x.w)]));aoa.push(["إجمالى الأعمال","","","",r2(X.work)],[]);
+    aoa.push(["المبالغ المسددة"],["تاريخ السداد","المبلغ","البيان"]);X.pays.forEach(l=>aoa.push([dd(l.date),r2(l.paid),l.desc]));aoa.push(["الإجمالى",r2(X.paid)],[]);
+    if(S.accMon||sd.open)aoa.push([S.accMon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة",r2(sd.open)]);aoa.push(["+ إجمالى الأعمال",r2(X.work)],["− إجمالى المسدد",r2(X.paid)],[sd.close>=0?"المبالغ المستحقة":"دفعة مقدمة",r2(Math.abs(sd.close))]);
+    const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=[{wch:40},{wch:16},{wch:14},{wch:12},{wch:16},{wch:14},{wch:14}];ws["!views"]=[{RTL:true}];XLSX.utils.book_append_sheet(wb,ws,"كشف الحساب");return saveFile(safe("كشف_حساب_"+a.name+(S.accMon?"_"+S.accMon:""))+".xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}
   if(kind==="pdf"){const rows=[];if(sd.open||S.accMon)rows.push(hasQ?["—",openL,"","","","",money(sd.open)]:["—",openL,"","",money(sd.open)]);
     sd.rows.forEach(l=>rows.push(hasQ?[dd(l.date),l.desc,l.q?fmt(l.q,2)+" "+(l.u||""):"",l.r?fmt(l.r,2):"",l.work?money(l.work):"",l.paid?money(l.paid):"",money(l.run)]:[dd(l.date),l.desc,l.work?money(l.work):"",l.paid?money(l.paid):"",money(l.run)]));
     const cols=hasQ?[["التاريخ",.1],["البيان",.32],["الكمية",.12],["السعر",.08],["أعمال",.13],["مدفوع",.12],["الرصيد",.13]]:[["التاريخ",.12],["البيان",.46],["أعمال",.14],["مدفوع",.14],["الرصيد",.14]];
@@ -1156,7 +1210,7 @@ async function makePdf(title,subtitle,blocks,filename){
       need(rh*3+(b.title?40:0));if(b.title){font(700,22);txt(b.title,W-MX,y+22,"right","#1B2A4A");ctx.fillStyle="#C9A227";ctx.fillRect(MX,y+32,tw,3);y+=46}header();
       const draw=(r,isTot,zebra)=>{if(y+rh>H-70){newPage();header()}ctx.fillStyle=isTot?"#FBF3DC":zebra?"#F4F6FA":"#fff";ctx.fillRect(MX,y,tw,rh);ctx.strokeStyle="#D0D5DD";ctx.lineWidth=1;ctx.strokeRect(MX,y,tw,rh);
         let x=W-MX;font(isTot?700:400,17);r.forEach((v,i)=>{const c=cols[i];if(!c)return;const s=String(v??"");const isNum=/^[\d,.\-–]+( ?[سم³ج]+)?$/.test(s.trim());txt(fit(s,c.w-14),isNum?x-c.w/2:x-8,y+25,isNum?"center":"right",isTot?"#1B2A4A":"#172033");x-=c.w});y+=rh};
-      b.rows.forEach((r,i)=>draw(r,false,i%2));if(b.total)draw(b.total,true,false);y+=24}
+      b.rows.forEach((r,i)=>draw(r,false,i%2));if(b.total)draw(b.total,true,false);(b.totals||[]).forEach(t=>draw(t,true,false));y+=24}
     else if(b.type==="text"){need(80);font(700,20);txt(b.title||"",W-MX,y+20,"right","#1B2A4A");y+=34;font(400,18);const words=String(b.text).split(/\s+/);let line="";for(const w of words){const t=line?line+" "+w:w;if(ctx.measureText(t).width>W-2*MX){need(30);txt(line,W-MX,y+18);y+=30;line=w}else line=t}if(line){need(30);txt(line,W-MX,y+18);y+=30}y+=14}
     else if(b.type==="sign"){need(110);y+=30;const n=b.items.length,cw=(W-2*MX)/n;b.items.forEach((l,i)=>{const x=W-MX-(i+1)*cw;font(600,18);txt(l,x+cw/2,y,"center","#1B2A4A");ctx.fillStyle="#9AA5BA";ctx.fillRect(x+40,y+50,cw-80,2)});y+=80}
   }
