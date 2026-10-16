@@ -910,7 +910,7 @@ function renderDayInner(main){
   main.innerHTML=`<div class="dayhead"><div class="r1"><button class="dnav" data-dnav="-1" aria-label="اليوم السابق">${IC("next",18)}</button><div class="dt"><b>${DAYN[dow(date)]} ${dd(date)}</b><small>اضغط لاختيار تاريخ آخر</small><input type="date" id="dayDate" value="${date}" aria-label="اختيار التاريخ"></div><button class="dnav" data-dnav="1" aria-label="اليوم التالى">${IC("prev",18)}</button></div>
     <div class="r2">${stPill}${isFri?'<span class="pill warn">جمعة</span>':""}${dow(date)===4?'<span class="pill">الخميس حتى 12 ظهرًا</span>':""}</div>
     <div class="wk">${week}</div>
-    <div class="dtools">${date!==T?`<button class="btn sm" data-dnav="today">اليوم</button>`:""}${edit?`<button class="btn sm" data-copyday="1">${IC("copy",15)} انسخ يومية أمس</button>${hourlyAct.length?`<button type="button" class="btn sm" data-copyy="1">${IC("bolt",15)} مواعيد المعدات من أمس</button>`:""}`:""}</div></div>
+    <div class="dtools">${date!==T?`<button class="btn sm" data-dnav="today">اليوم</button>`:""}</div></div>
   <div class="dsum"><div><small>أعمال اليوم</small><b id="dsW">—</b></div><div><small>منصرف الخزنة</small><b id="dsO">—</b></div><div><small>وارد</small><b id="dsI">—</b></div></div>
   ${banner}<form id="dayForm">
   <div class="gh"><span>التشغيل</span></div><div class="grp">
