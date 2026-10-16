@@ -199,6 +199,33 @@ details.sec[open] .chev{transform:rotate(-45deg)}
 .fev .seg{flex:none}.fev .seg button{min-height:38px;padding:6px 13px;font-size:13.5px}
 .fev input{flex:1 1 100%;min-height:42px!important;text-align:right!important;font-size:14.5px!important;font-weight:400!important}
 body.eng .mny,body.eng .sec .tot{display:none!important}
+.qk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:12px;margin-bottom:10px;border-top:3px solid var(--gold)}
+.qkh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.qkh b{display:block;color:var(--navy);font-size:15.5px}.qkh small{color:var(--muted);font-size:12px}
+:root[data-theme="dark"] .qkh b{color:var(--ink)}
+.qkbal{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.qkbal>div{background:var(--field);border-radius:10px;padding:7px 9px;min-width:0}.qkbal small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qkbal b{font-size:15px;color:var(--navy)}
+.qkbal .hi{background:var(--navy)}.qkbal .hi small{color:var(--gold2)}.qkbal .hi b{color:#fff}.qkbal b.in{color:var(--ok)}.qkbal b.out{color:var(--bad)}
+:root[data-theme="dark"] .qkbal b{color:var(--ink)}
+.qkt{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:var(--sunk);padding:4px;border-radius:12px;margin-bottom:8px}
+.qkt button{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;border-radius:9px;padding:7px 2px;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;min-height:48px}
+.qkt button[aria-pressed="true"]{background:var(--surface);color:var(--navy);box-shadow:0 1px 3px rgba(16,24,40,.12),inset 0 -2px 0 var(--gold)}
+:root[data-theme="dark"] .qkt button[aria-pressed="true"]{color:var(--ink)}
+.qkfav{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}.qkfav span{font-size:12px;color:var(--muted)}
+.qkfav button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink)}
+.qkfav button[aria-pressed="true"]{background:var(--goldbg);border-color:var(--gold);color:var(--navy);font-weight:700}
+.qkf{display:grid;grid-template-columns:2fr 1.2fr 1fr 1.4fr auto;gap:8px;align-items:end}
+.qkf .f.sm{min-width:0}.qkf .f.amt input{font-size:18px;font-weight:700;color:var(--navy)}
+:root[data-theme="dark"] .qkf .f.amt input{color:var(--ink)}
+.qkf .qkgo{min-height:44px;white-space:nowrap}
+.qkhint{min-height:18px;margin-top:6px;color:var(--muted)}
+.qkl{margin-top:8px;border-top:1px solid var(--line2)}
+.qr{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line2)}
+.qr .qn{min-width:0}.qr .qn b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qr .qn small{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qr .qa{font-weight:700;font-size:14.5px}.qr .qa.out{color:var(--bad)}.qr .qa.in{color:var(--ok)}
+.qr .x{position:static;width:30px;height:30px}.qr.qt{border-bottom:0;background:var(--field);border-radius:8px;padding:8px}
+@media(max-width:720px){.qkbal{grid-template-columns:1fr 1fr}.qkf{grid-template-columns:1fr 1fr}.qkf>label:first-child{grid-column:1/-1}.qkf .qkgo{grid-column:1/-1}.qkt button span{font-size:11.5px}}
+.chgi{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:var(--surface)}.chgi.warn{border-color:var(--gold);box-shadow:inset 3px 0 0 var(--gold)}
+.cdk{margin-top:10px}.cdk>b{display:block;font-size:13px;color:var(--navy);margin-bottom:4px}:root[data-theme="dark"] .cdk>b{color:var(--ink)}
+.cdr{font-size:13px;padding:5px 9px;border-radius:7px;margin:3px 0}.cdr.rem{background:var(--badbg);color:var(--bad);text-decoration:line-through;text-decoration-thickness:1px}.cdr.add{background:var(--okbg);color:var(--ok);font-weight:600}
 .wtrow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.wtrow .evlab{font-size:12px;color:var(--muted)}
 .seg.wts button{padding:4px 10px;min-height:30px;font-size:12.5px}.seg.wts button.rock[aria-pressed="true"]{background:#6B46A8;color:#fff}.seg.wts button.soil[aria-pressed="true"]{background:#2F4F9A;color:#fff}.seg.wts button.fill[aria-pressed="true"]{background:#1F7A4A;color:#fff}.seg.wts button.gen[aria-pressed="true"]{background:#6B7385;color:#fff}
 .pill.wtp.rock{background:#F2ECFA;color:#6B46A8}.pill.wtp.soil{background:var(--infobg);color:var(--info)}.pill.wtp.fill{background:var(--okbg);color:var(--ok)}
@@ -568,7 +595,7 @@ function IC(n,s){return`<svg class="ic" viewBox="0 0 24 24" style="width:${s||20
 
 /* ============================================================ state */
 const S={db:null,user:null,dl:null,local:false,uid:null,myName:"",isOwner:false,role:"none",perms:[],
-  master:null,days:{},entries:{},sealed:{},requests:{},joins:{},prod:{},loaded:{},
+  master:null,days:{},entries:{},sealed:{},requests:{},joins:{},prod:{},chg:{},odraft:lsGet("zf_odraft")||{},qk:{t:"pay",m:"نقدى"},loaded:{},
   tab:"home",date:todayStr(),cur:null,dirty:false,saving:false,again:false,timer:null,entTimers:{},
   acc:null,accFrom:"",accTo:"",accEq:"",accFilter:"all",repFrom:"",repTo:"",names:{},fieldDate:todayStr(),fieldDraft:{},auth:null,fbUser:null,roleDoc:null,accPerms:[],unsubs:[],roleUnsub:null,ownerMeta:null,entPending:{},roleSent:{},bootstrapping:false};
 function blankMaster(){return{suppliers:[],hourly:[],monthly:[],trucks:[],items:[],workers:[],partners:[],dieselPrices:[],cats:CATS.slice(),users:[],start:""}}
@@ -580,10 +607,13 @@ const M=()=>S.master||blankMaster();
 /* ============================================================ persistence */
 const LOCALKEY="zf_local_v1";
 function localAll(){return lsGet(LOCALKEY)||{}}
-function localApply(){const all=localAll();S.master=normMaster(all["master/main"]);S.days={};S.entries={};S.sealed={};S.requests={};S.joins={};S.prod={};
-  for(const[p,v]of Object.entries(all)){const[c,id]=p.split("/");if(c==="days")S.days[id]=v;else if(c==="entries")S.entries[id]=v;else if(c==="sealed")S.sealed[id]=v;else if(c==="requests")S.requests[id]=v;else if(c==="join")S.joins[id]=v;else if(c==="prod")S.prod[id]=v}}
+function localApply(){const all=localAll();S.master=normMaster(all["master/main"]);S.days={};S.entries={};S.sealed={};S.requests={};S.joins={};S.prod={};S.chg={};
+  for(const[p,v]of Object.entries(all)){const[c,id]=p.split("/");if(c==="days")S.days[id]=v;else if(c==="entries")S.entries[id]=v;else if(c==="sealed")S.sealed[id]=v;else if(c==="requests")S.requests[id]=v;else if(c==="join")S.joins[id]=v;else if(c==="prod")S.prod[id]=v;else if(c==="chg")S.chg[id]=v}}
 async function put(path,data){if(S.local){const all=localAll();all[path]=clone(data);lsSet(LOCALKEY,all);localApply();scheduleRender();return}await fbWait(S.db.doc(path).set(clone(data)));
   if(path.startsWith("days/")&&isMgr()){const d=path.slice(5);S.db.doc("dstat/"+d).set({status:data.status||"open",approved:!!data.approved}).catch(()=>{})}}
+async function patch(path,obj){if(S.local){const all=localAll();all[path]=Object.assign({},all[path]||{},clone(obj));lsSet(LOCALKEY,all);localApply();scheduleRender();return}
+  await fbWait(S.db.doc(path).set(clone(obj),{merge:true}));
+  if(path.startsWith("days/")&&isMgr()&&("status" in obj||"approved" in obj)){const d=path.slice(5);const o=Object.assign({},S.days[d]||{},obj);S.db.doc("dstat/"+d).set({status:o.status||"open",approved:!!o.approved}).catch(()=>{})}}
 async function remove(path){if(S.local){const all=localAll();delete all[path];lsSet(LOCALKEY,all);localApply();scheduleRender();return}await fbWait(S.db.doc(path).delete())}
 async function fbWait(p){let to;const r=await Promise.race([p.then(()=>"ok"),new Promise(res=>{to=setTimeout(()=>res("wait"),7000)})]);clearTimeout(to);
   if(r==="wait"){toast("تم الحفظ على الجهاز – سيُرفع تلقائيًا عند عودة الإنترنت");p.catch(e=>toast("تعذر رفع حفظ سابق: "+errMsg(e)))}}
@@ -591,14 +621,14 @@ function unsubAll(){(S.unsubs||[]).forEach(f=>{try{f()}catch(e){}});S.unsubs=[]}
 function subscribe(){
   unsubAll();const db=S.db,U=S.unsubs;const err=e=>{console.warn(e);if(e&&e.code==="permission-denied")toast("لا توجد صلاحية لقراءة بعض البيانات")};
   const coll=(q,key)=>U.push(q.onSnapshot(s=>{const o={};s.docs.forEach(d=>{o[d.id]=clone(d.data())});if(key==="entries")Object.keys(S.entPending).forEach(id=>{if(S.entries[id])o[id]=S.entries[id]});S[key]=o;S.loaded[key]=true;onRemote(key);scheduleRender()},err));
-  S.days={};S.entries={};S.sealed={};S.requests={};S.prod={};
+  S.days={};S.entries={};S.sealed={};S.requests={};S.prod={};S.chg={};
   if(isMgr()||isEng())coll(db.collection("prod"),"prod");
   if(isEng()){
     U.push(db.doc("master/main").onSnapshot(s=>{S.master=normMaster(s.exists?clone(s.data()):null);S.loaded.master=true;scheduleRender()},err));
     coll(db.collection("days"),"days");coll(db.collection("entries"),"entries");coll(db.collection("requests").where("by","==",S.uid),"requests");
   }else if(isMgr()){
     U.push(db.doc("master/main").onSnapshot(s=>{S.master=normMaster(s.exists?clone(s.data()):null);S.loaded.master=true;if(isOwner()&&(S.master.users||[]).length)syncRoles(S.master).catch(()=>{});scheduleRender()},err));
-    coll(db.collection("days"),"days");coll(db.collection("entries"),"entries");coll(db.collection("sealed"),"sealed");
+    coll(db.collection("days"),"days");coll(db.collection("entries"),"entries");coll(db.collection("sealed"),"sealed");coll(db.collection("chg"),"chg");
     coll(isOwner()?db.collection("requests"):db.collection("requests").where("by","==",S.uid),"requests");
   }else if(S.role==="field"){
     coll(db.collection("entries").where("by","==",S.uid),"entries");
@@ -608,7 +638,7 @@ function subscribe(){
   scheduleRender();
 }
 function onRemote(key){
-  if(key==="days"&&S.cur&&!S.dirty&&!S.saving){const focused=document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#dayForm");
+  if(key==="days"&&S.cur&&!S.dirty&&!S.saving&&!(ownLock()&&S.odraft[S.cur.date])){const focused=document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#dayForm");
     if(!focused){const d=S.days[S.cur.date];if(d)S.cur=normDay(clone(d),S.cur.date)}}
 }
 let renderT=null;function scheduleRender(){clearTimeout(renderT);renderT=setTimeout(render,40)}
@@ -709,6 +739,11 @@ function tampered(date){const d=S.days[date],s=S.sealed[date];if(!d||!s||!d.appr
 function markDirty(){S.dirty=true;WTI=null;setSave("busy","تعديلات غير محفوظة…");clearTimeout(S.timer);S.timer=setTimeout(saveDay,900);updateDayTotals()}
 async function saveDay(){
   if(!S.dirty||!S.cur)return;if(S.saving){S.again=true;return}
+  if(ownLock()){S.dirty=false;const date=S.cur.date;const base=normDay(clone(S.days[date]||{}),date);const keys=dayDiff(base,S.cur);
+    if(keys.length)S.odraft[date]=clone(S.cur);else delete S.odraft[date];saveODraft();
+    const free={};FREEK.forEach(k=>{if(canon(base[k]||[])!==canon(S.cur[k]||[]))free[k]=clone(S.cur[k]||[])});
+    if(Object.keys(free).length){S.saving=true;try{await patch("days/"+date,Object.assign({date},free))}catch(e){setSave("err","تعذر حفظ التقييم: "+errMsg(e))}finally{S.saving=false}}
+    setSave(keys.length?"busy":"ok",keys.length?`تعديل فى ${keys.length} قسم – أرسله للمحاسب`:"تم الحفظ");ownBar();return}
   S.saving=true;S.dirty=false;const body=clone(S.cur);body.updatedAt=new Date().toISOString();body.updatedBy=S.uid||"";
   try{await put("days/"+body.date,body);setSave("ok","تم الحفظ "+new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}))}
   catch(e){S.dirty=true;setSave("err",e&&e.code==="permission-denied"?"ليس لديك صلاحية الحفظ":"تعذر الحفظ – ستتم إعادة المحاولة");if(!(e&&e.code==="permission-denied"))setTimeout(saveDay,4000)}
@@ -717,6 +752,72 @@ async function saveDay(){
 function saveEntryDoc(id){S.entPending[id]=true;clearTimeout(S.entTimers[id]);S.entTimers[id]=setTimeout(async()=>{try{await put("entries/"+id,S.entries[id]);setSave("ok","تم الحفظ")}catch(e){setSave("err","تعذر الحفظ: "+errMsg(e))}finally{delete S.entPending[id]}},600)}
 function setSave(kind,txt){const d=$("#saveDot"),t=$("#saveTxt");if(d)d.className="dot "+(kind||"");if(t)t.textContent=txt}
 function logAct(day,act,note){day.log=day.log||[];day.log.push({at:new Date().toISOString(),by:S.uid||"",act,note:note||""})}
+/* ============================================================ OWNER CHANGES NEED ACCOUNTANT APPROVAL */
+const FREEK=["evl","wtc"];const MONEYK=ARR.filter(k=>!FREEK.includes(k)).concat(["notes"]);
+const ownLock=()=>isOwner()&&!S.local;
+const kv=(d,k)=>k==="notes"?(d.notes||""):(d[k]||[]);
+function dayDiff(base,cur){return MONEYK.filter(k=>canon(kv(base,k))!==canon(kv(cur,k)))}
+function pendChg(date){return Object.entries(S.chg||{}).filter(([,c])=>c.status==="pending"&&(!date||c.date===date)).sort((a,b)=>a[1].at<b[1].at?-1:1)}
+function saveODraft(){lsSet("zf_odraft",S.odraft||{})}
+async function proposeDay(date,cur,reason,src){const base=normDay(clone(S.days[date]||{}),date);const keys=dayDiff(base,cur);if(!keys.length)return null;
+  const before={},after={};keys.forEach(k=>{before[k]=clone(kv(base,k));after[k]=clone(kv(cur,k))});
+  const id=uid("c");await put("chg/"+id,{kind:"keys",path:"days/"+date,date,by:S.uid||"",at:new Date().toISOString(),status:"pending",keys,before,after,reason:reason||"",src:src||"day"});return id}
+async function ownPut(date,day,keys){if(ownLock()){const o={date};keys.forEach(k=>{o[k]=day[k]===undefined?null:day[k]});return patch("days/"+date,o)}return put("days/"+date,day)}
+const KN={hourly:"معدات بالساعة",mex:"إيجار شهري",wex:"العمالة",trk:"سيارات النقل",itm:"بنود بالعدد",dsl:"السولار",exp:"النثريات",pay:"دفعات الموردين والعمالة",adv:"السلف",geo:"كميات المقاولين",inc:"الوارد للخزنة",adj:"قيود التسوية",wat:"المياه",notes:"ملاحظات اليوم",evl:"التقييم",wtc:"نوع الشغل"};
+function accName(k){const m=M();const[t,id]=String(k||"").split(":");return(t==="sup"?(byId(m.suppliers,id)||{}).name:t==="wrk"?(byId(m.workers,id)||{}).name:"")||"—"}
+function rowParts(k,r,date){const m=M();const nm=(l,id)=>(byId(l,id)||{}).name||"";const am=v=>n0(v)?money(n0(v))+" ج":"";
+  switch(k){
+  case"hourly":{const e=byId(m.hourly,r.e)||{};return[e.name||"معدة",r.off?"لا تعمل":(r.s||r.t?`${r.s||"?"}–${r.t||"?"} = `:"")+fmt(hourlyHours(r),2)+" س"+(n0(r.dh)?` · خصم ${fmt(r.dh,2)} س`:"")]}
+  case"trk":{const t=byId(m.trucks,r.t)||{};return[t.plate||"سيارة",r.off?"لا تعمل":fmt(r.n)+" نقلة"+(n0(r.dm)?` · خصم ${fmt(r.dm,2)} م³`:"")]}
+  case"mex":return[nm(m.monthly,r.id),({"":"تعمل",half:"نصف يوم",off:"عطل",fri:"عمل الجمعة"}[r.k||""]||r.k||"")+(n0(r.ot)?` + إضافى ${r.ot} س`:"")+(r.r?" – "+r.r:"")];
+  case"wex":return[nm(m.workers,r.id),({"":"حاضر",half:"نصف يوم",off:"غياب",fri:"عمل الجمعة"}[r.k||""]||r.k||"")+(n0(r.ot)?` + إضافى ${r.ot} س`:"")+(n0(r.dh)?` · خصم ${r.dh} س`:"")];
+  case"itm":return[nm(m.items,r.i),fmt(r.n,2)];
+  case"dsl":return[nm(m.monthly,r.e)||nm(m.hourly,r.e)||"أخرى / مولد",(n0(r.l)?fmt(r.l)+" لتر · ":"")+money(dieselAmount(r,date))+" ج"];
+  case"exp":return[r.d||r.c||"مصروف",(r.c&&r.d?r.c+" · ":"")+am(r.a)];
+  case"pay":return[accName(r.acc),am(r.a)+(r.n?" · "+r.n:"")];
+  case"adv":return[(r.w?nm(m.workers,r.w):r.nm)||"—","سلفة "+am(r.a)];
+  case"geo":return[nm(m.suppliers,r.c),(r.d||"")+" "+fmt(r.q,2)];
+  case"inc":return[r.src==="partner"?nm(m.partners,r.p):r.src==="mst"?"مستخلص "+(r.no||""):"إيراد آخر",am(r.a)];
+  case"adj":return[accName(r.acc),(r.k==="deduct"?"خصم − ":"أعمال + ")+am(r.a)+(r.n?" · "+r.n:"")];
+  case"wat":return[r.s||"مياه",(n0(r.n)?fmt(r.n)+" نقلة · ":"")+money(watAmt(r))+" ج"];
+  case"evl":return[(evlName(r.k,r.id)||[""])[0],(r.rt?RTL[r.rt]:"")+(r.n?" – "+r.n:"")];
+  case"wtc":return[r.k+":"+r.id,WT[r.v]||r.v]}
+  return["",JSON.stringify(r)]}
+const rowTxt=(k,r,date)=>rowParts(k,r,date).filter(Boolean).join(": ");
+function rowsDiff(bef,aft){const cb=bef.map(canon),ca=aft.map(canon);const used=new Set();const rem=[],add=[];
+  bef.forEach((r,i)=>{const j=ca.findIndex((c,jj)=>c===cb[i]&&!used.has(jj));if(j>=0)used.add(j);else rem.push(r)});aft.forEach((r,j)=>{if(!used.has(j))add.push(r)});return{rem,add}}
+function chgBody(id,c){const st={pending:["بانتظار موافقة المحاسب","warn"],ok:["تمت الموافقة وطُبق","ok"],no:["رفضه المحاسب","bad"],cancel:["ألغاه المالك",""]}[c.status]||[c.status,""];
+  let det="";
+  if(c.kind==="full")det=`<div class="cdk"><b>${c.path.startsWith("days/")?"يومية كاملة":"إدخال مشرف كامل"}</b><div class="small muted">${c.src==="restore"?"من نسخة احتياطية – ":""}${ARR.reduce((a,k)=>a+((c.after||{})[k]||[]).length,0)} سطر</div></div>`;
+  else det=(c.keys||[]).map(k=>{if(k==="notes")return`<div class="cdk"><b>${KN[k]}</b><div class="cdr rem">− ${esc(c.before.notes||"(فارغ)")}</div><div class="cdr add">+ ${esc(c.after.notes||"(فارغ)")}</div></div>`;
+    const D=rowsDiff(c.before[k]||[],c.after[k]||[]);return`<div class="cdk"><b>${KN[k]||k}</b>${D.rem.map(r=>`<div class="cdr rem">− ${esc(rowTxt(k,r,c.date))}</div>`).join("")}${D.add.map(r=>`<div class="cdr add">+ ${esc(rowTxt(k,r,c.date))}</div>`).join("")}${!D.rem.length&&!D.add.length?'<div class="small muted">تغيير فى الترتيب فقط</div>':""}</div>`}).join("");
+  let stale=false;if(c.status==="pending"&&c.kind!=="full"){const cur=normDay(clone(S.days[c.date]||{}),c.date);stale=(c.keys||[]).some(k=>canon(kv(cur,k))!==canon(c.before[k]??(k==="notes"?"":[])))}
+  const canDec=c.status==="pending"&&S.role==="accountant";const canCancel=c.status==="pending"&&isOwner()&&c.by===S.uid;
+  return`<div class="chgi ${st[1]}"><div class="row"><b class="grow">يومية ${DAYN[dow(c.date)]||""} ${dd(c.date)}</b><span class="pill ${st[1]}">${st[0]}</span></div>
+  <div class="small muted">أرسله ${esc(nameSync(c.by))} – ${new Date(c.at).toLocaleString("ar-EG")}${c.status!=="pending"&&c.decidedAt?` · ${c.decidedBy?esc(nameSync(c.decidedBy))+" – ":""}${new Date(c.decidedAt).toLocaleString("ar-EG")}`:""}</div>
+  ${c.reason?`<div class="small" style="margin-top:6px"><b>السبب:</b> ${esc(c.reason)}</div>`:""}${c.dnote?`<div class="small"><b>ملاحظة المحاسب:</b> ${esc(c.dnote)}</div>`:""}
+  ${det}${stale?'<div class="alert warn small" style="margin-top:6px">اليومية اتغيرت بعد إرسال الطلب – الموافقة هتستبدل الأقسام دى بنسخة المالك.</div>':""}
+  ${canDec?`<div class="row" style="margin-top:10px"><input class="in grow" placeholder="ملاحظة (اختيارى)" data-cnote="${id}"><button type="button" class="btn danger sm" data-chgno="${id}">رفض</button><button type="button" class="btn gold sm" data-chgok="${id}">موافقة وتطبيق</button></div>`:""}
+  ${canCancel?`<div class="row" style="margin-top:10px"><button type="button" class="btn sm" data-chgcan="${id}">إلغاء الطلب</button></div>`:""}</div>`}
+function chgListModal(date){const all=Object.entries(S.chg||{}).filter(([,c])=>!date||c.date===date);
+  const P=all.filter(([,c])=>c.status==="pending").sort((a,b)=>a[1].at<b[1].at?-1:1),D=all.filter(([,c])=>c.status!=="pending").sort((a,b)=>a[1].at<b[1].at?1:-1).slice(0,15);
+  const intro=S.role==="accountant"?'<p class="small muted">أى تعديل من المالك فى الأرقام لا يُطبق إلا بموافقتك. راجع كل سطر: (−) قبل التعديل و(+) بعده.</p>':'<p class="small muted">تعديلاتك فى الأرقام تنتظر موافقة المحاسب، ولا تُطبق قبلها.</p>';
+  modal({title:"تعديلات المالك"+(date?" – "+dd(date):""),body:intro+(P.length||D.length?(P.length?P.map(([id,c])=>chgBody(id,c)).join(""):'<p class="muted">لا توجد تعديلات بانتظار الموافقة.</p>')+(D.length?`<div class="gh"><span>السابقة</span></div>`+D.map(([id,c])=>chgBody(id,c)).join(""):""):'<p class="muted">لا توجد تعديلات.</p>'),ok:"إغلاق",cancel:""})}
+async function chgApply(id,ok,note){const c=S.chg[id];if(!c||c.status!=="pending")return;
+  if(ok){const path=c.path||("days/"+c.date);let doc;
+    if(c.kind==="full")doc=clone(c.after);
+    else{doc=path.startsWith("days/")?normDay(clone(S.days[c.date]||{}),c.date):clone(S.entries[path.slice(8)]||{});(c.keys||[]).forEach(k=>{doc[k]=clone(c.after[k])})}
+    if(path.startsWith("days/")){doc=normDay(doc,c.date);doc.approved=false;delete doc.approvedAt;delete doc.approvedBy;logAct(doc,"تطبيق تعديل المالك بموافقة المحاسب",c.reason||"")}
+    doc.chg=id;await put(path,doc);
+    if(path.startsWith("days/")&&S.cur&&S.cur.date===c.date&&!S.dirty)S.cur=normDay(clone(doc),c.date)}
+  await patch("chg/"+id,{status:ok?"ok":"no",decidedBy:S.uid||"",decidedAt:new Date().toISOString(),dnote:note||""})}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-chgok],[data-chgno],[data-chgcan],[data-chgv]");if(!b)return;
+  if(b.dataset.chgv){const c=S.chg[b.dataset.chgv];$("#modalRoot").innerHTML="";chgListModal(c?c.date:"");return}
+  const id=b.dataset.chgok||b.dataset.chgno||b.dataset.chgcan;const c=S.chg[id];if(!c)return;b.disabled=true;
+  try{if(b.dataset.chgcan){await patch("chg/"+id,{status:"cancel",decidedAt:new Date().toISOString()});toast("تم إلغاء الطلب")}
+    else{const n=document.querySelector(`[data-cnote="${id}"]`);await chgApply(id,!!b.dataset.chgok,n?n.value.trim():"");toast(b.dataset.chgok?"تمت الموافقة وطُبق التعديل":"تم رفض التعديل")}
+    S.chg[id]=Object.assign({},c,{status:b.dataset.chgok?"ok":b.dataset.chgno?"no":"cancel"});$("#modalRoot").innerHTML="";render();if(pendChg().length&&S.role==="accountant")chgListModal()}
+  catch(x){b.disabled=false;toast("تعذر: "+errMsg(x))}});
 
 /* ============================================================ modal */
 function modal({title,body,ok="تأكيد",cancel="إلغاء",danger=false,onOk,onInit}){
@@ -819,6 +920,9 @@ function renderHome(main){
     Object.entries(S.requests).filter(([,r])=>r.status==="pending").forEach(([id,r])=>alerts.push(`<div class="alert info"><b>طلب تعديل يومية ${dd(r.date)}</b><span class="small">${esc(nameSync(r.by))}: ${esc(r.reason)}</span><button class="btn sm pri" data-act="reqOk" data-id="${id}">${dayStatus(r.date)==="closed"?"موافقة وفتح اليوم":"تم التصحيح"}</button><button class="btn sm" data-act="reqNo" data-id="${id}">رفض</button></div>`));
 
   }
+  {const pc=pendChg();if(S.role==="accountant"&&pc.length)alerts.unshift(`<div class="alert bad"><b>${pc.length} تعديل من المالك بانتظار موافقتك</b><span class="small">لا يُطبق أى تعديل للمالك فى الأرقام إلا بعد مراجعتك</span><button class="btn sm pri" data-act="chgList">مراجعة</button></div>`);
+    if(isOwner()&&!S.local){const mine=pc.filter(([,c])=>c.by===S.uid);if(mine.length)alerts.push(`<div class="alert info"><b>${mine.length} تعديل مُرسل للمحاسب</b><span class="small">بانتظار موافقته</span><button class="btn sm" data-act="chgList">عرض</button></div>`);
+      const rej=Object.values(S.chg||{}).filter(c=>c.status==="no"&&c.by===S.uid&&c.decidedAt&&Date.now()-new Date(c.decidedAt)<3*864e5);if(rej.length)alerts.push(`<div class="alert bad"><b>المحاسب رفض ${rej.length} تعديل</b><button class="btn sm" data-act="chgList">التفاصيل</button></div>`)}}
   if(S.role==="accountant"){Object.entries(S.requests).filter(([,r])=>r.by===S.uid).slice(-3).forEach(([,r])=>alerts.push(`<div class="alert ${r.status==="approved"?"ok":r.status==="rejected"?"bad":"info"}">طلب تعديل ${dd(r.date)}: <b>${{pending:"بانتظار المالك",approved:"تمت الموافقة – اليوم مفتوح",rejected:"مرفوض"}[r.status]}</b></div>`))}
   const open=pastDaysWithoutClose();if(open.length)alerts.push(`<div class="alert warn"><b>${open.length} يوم سابق لم يُقفل</b><span class="muted small">${open.slice(-6).map(([d,s])=>dshort(d)+(s==="none"?" (بدون يومية)":"")).join("، ")}</span><button class="btn sm" data-act="gotoDay" data-d="${open[open.length-1][0]}">فتح آخر يوم</button></div>`);
   const m=M();
@@ -852,11 +956,13 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]
   else if(a==="gotoSet"){S.tab="set";render()}
   else if(a==="openAcc"){S.tab="acc";S.acc=b.dataset.k;render();window.scrollTo(0,0)}
   else if(a==="approveAll"){const pend=Object.keys(S.days).filter(d=>S.days[d].status==="closed"&&!S.days[d].approved);const ok=await modal({title:"اعتماد اليوميات",body:`<p>سيتم اعتماد ${pend.length} يومية وحفظ نسخة معتمدة منها لا يمكن تعديلها إلا بموافقتك.</p>`,ok:"اعتماد"});if(!ok)return;for(const d of pend)await approveDay(d,true);toast("تم الاعتماد");render()}
-  else if(a==="reqOk"||a==="reqNo"){const id=b.dataset.id;const r=S.requests[id];if(!r)return;if(a==="reqOk"&&dayStatus(r.date)==="closed"){const day=normDay(clone(S.days[r.date]||{}),r.date);day.status="open";day.approved=false;logAct(day,"فتح للتعديل بموافقة المالك",r.reason);await put("days/"+r.date,day)}await put("requests/"+id,Object.assign({},r,{status:a==="reqOk"?"approved":"rejected",doneAt:new Date().toISOString()}));toast(a==="reqOk"?"تم فتح اليوم للتعديل":"تم رفض الطلب")}
+  else if(a==="chgList")chgListModal();
+  else if(a==="reqOk"||a==="reqNo"){const id=b.dataset.id;const r=S.requests[id];if(!r)return;if(a==="reqOk"&&dayStatus(r.date)==="closed"){const day=normDay(clone(S.days[r.date]||{}),r.date);day.status="open";day.approved=false;logAct(day,"فتح للتعديل بموافقة المالك",r.reason);await ownPut(r.date,day,["status","approved","log"])}await put("requests/"+id,Object.assign({},r,{status:a==="reqOk"?"approved":"rejected",doneAt:new Date().toISOString()}));toast(a==="reqOk"?"تم فتح اليوم للتعديل":"تم رفض الطلب")}
 });
 
 /* ============================================================ DAY (manager) */
-function openDay(date){if(S.dirty)saveDay();S.date=date;S.cur=normDay(clone(S.days[date]||{}),date)}
+function openDay(date){if(S.dirty)saveDay();S.date=date;S.cur=ownLock()&&S.odraft&&S.odraft[date]?normDay(clone(S.odraft[date]),date):normDay(clone(S.days[date]||{}),date)}
+function ownBar(){if(S.tab!=="day"||!S.cur)return;const has=!!(ownLock()&&S.odraft[S.cur.date]);const f=$("#foot .fact");if(!f)return;const ex=f.querySelector("[data-oprop]");const cl=f.querySelector('[data-day="close"]');if(cl)cl.hidden=has;if(has&&!ex){f.insertAdjacentHTML("afterbegin",`<span data-oprop="1" style="display:contents"><button class="btn ghost" data-day="odiscard">إلغاء التعديل</button><button class="btn gold" data-day="opropose">إرسال للمحاسب</button></span>`)}else if(!has&&ex)ex.remove()}
 function dayTotals(date){const d=mergedDay(date,true);const m=M();let works=0,out=0,inn=0;const P={};let _w=0;const snap=k=>{P[k]=(P[k]||0)+works-_w;_w=works};
   d.hourly.forEach(h=>{const e=byId(m.hourly,h.e);if(e)works+=hourlyHours(h)*(rateAt(e.rates,date)||0)});snap("h");
   d.trk.forEach(x=>{const t=byId(m.trucks,x.t);if(!t)return;works+=truckM3(x,t)*truckRate(t,date)});snap("t");
@@ -881,11 +987,12 @@ function updateDayTotals(){if(S.tab!=="day"||!S.cur)return;const t=dayTotals(S.c
 }
 function srcAttrs(r){return`data-src="${r._src}" data-i="${r._i}"`}
 function byTag(r){return r._src&&r._src.startsWith("ent:")?`<span class="tag">أدخله: ${esc(nameSync(r._by))}</span>`:""}
-function focusKey(el){if(!el||!el.dataset||!el.closest||!el.closest("#dayForm"))return null;return["arr","k","src","i","e","t","it","exf","id","evln"].map(k=>el.dataset[k]||"").join("|")+"|"+el.tagName}
+function focusKey(el){if(!el||!el.dataset||!el.closest||!el.closest("#dayForm")||el.dataset.qk)return null;return["arr","k","src","i","e","t","it","exf","id","evln"].map(k=>el.dataset[k]||"").join("|")+"|"+el.tagName}
 function renderDay(main){
-  const fk=focusKey(document.activeElement);
+  const fk=focusKey(document.activeElement);const ae=document.activeElement;if(!S.qkFocus&&ae&&ae.dataset&&ae.dataset.qk&&ae.id)S.qkFocus=ae.id;
   renderDayInner(main);
   if(fk){const el=[...main.querySelectorAll("#dayForm input,#dayForm select")].find(x=>focusKey(x)===fk);if(el){const det=el.closest("details");if(det)det.open=true;try{el.focus({preventScroll:true})}catch(e){el.focus()}}}
+  if(S.qkFocus){const el=document.getElementById(S.qkFocus);S.qkFocus=null;if(el){try{el.focus({preventScroll:true})}catch(e){el.focus()}}}
 }
 function renderDayInner(main){
   if(!S.cur||S.cur.date!==S.date)openDay(S.date);
@@ -895,10 +1002,12 @@ function renderDayInner(main){
   let banner="";
   if(st==="closed")banner=`<div class="alert ${day.approved?"ok":"warn"}">اليومية مقفولة${day.closedAt?" بواسطة "+esc(nameSync(day.closedBy))+" – "+new Date(day.closedAt).toLocaleString("ar-EG"):""}${day.approved?" ومعتمدة من المالك":" – بانتظار اعتماد المالك"}.</div>`;
   if(tampered(date))banner+=`<div class="alert bad"><b>تنبيه:</b> محتوى هذا اليوم يختلف عن النسخة المعتمدة.</div>`;
+  if(ownLock()&&edit)banner+=`<div class="alert info">أنت تعدّل كمالك: أى تعديل فى الأرقام لا يُحفظ على اليومية إلا بعد موافقة المحاسب (زر «إرسال للمحاسب» تحت). التقييم ونوع الشغل يُحفظان مباشرة.${S.odraft[date]?" <b>عندك تعديل لم يُرسل بعد.</b>":""}</div>`;
+  {const pc=pendChg(date);if(pc.length&&!isEng())banner+=`<div class="alert warn">${S.role==="accountant"?"تعديل من المالك بانتظار موافقتك":"تعديل مُرسل للمحاسب بانتظار الموافقة"} على هذا اليوم (${pc.length}) <button type="button" class="btn sm" data-chgv="${pc[0][0]}">عرض</button></div>`}
   if(date>todayStr()&&!isOwner())banner+=`<div class="alert info">لا يمكن إدخال يومية لتاريخ مستقبلي.</div>`;
   const aOpen=false;
   const isEnt=r=>!!(r&&r._src&&r._src.startsWith("ent:"));
-  const canRow=r=>edit&&(!isEnt(r)||isOwner());const canAdd=arr=>edit;const rro=r=>canRow(r)?"":" disabled";
+  const canRow=r=>edit&&(!isEnt(r)||S.role==="accountant"||(isOwner()&&S.local));const canAdd=arr=>edit;const rro=r=>canRow(r)?"":" disabled";
   const Y=addDays(date,-1),yd=mergedDay(Y,false),CP=compute(date),WARN=dayWarnings(date,CP);
   const hourlyAct=m.hourly.filter(e=>isActive(e,date)||d.hourly.some(h=>h.e===e.id));
   const monthlyAct=m.monthly.filter(e=>isActive(e,date));
@@ -996,7 +1105,7 @@ function renderDayInner(main){
   ${sec("t","truck","op","سيارات النقل",trucksAct.length?`${trucksAct.length} سيارات · ${fmt(tl)} نقلة · ${fmt(tm,2)} م³${tOff?` · ${tOff} لا تعمل`:""}`:"لا توجد سيارات",trucksHtml,"trk",Object.keys(WARN.trk).length?"y":d.trk.length?"g":"")}
   ${sec("b","box","op","بنود بالعدد",itemsAct.length?cnt("itm","بند"):"لا توجد بنود",itemsHtml,"itm",dotOf("itm"))}
   ${sec("w","users","op","حضور العمالة",workersAct.length?`${workersAct.length} عامل${wAbs?` · ${wAbs} غياب`:" · الكل حاضر"}`:"لا يوجد",workersHtml,"",workersAct.length?(wAbs?"y":"g"):"")}
-  </div>${isEng()?"<!--":""}<div class="gh"><span>الخزنة والمصروفات</span></div><div class="grp">
+  </div>${isEng()?"<!--":""}<div class="gh"><span>الخزنة والمصروفات</span></div>${isEng()?"":qkCard(date,CP,edit)}<div class="grp">
   ${sec("d","fuel","cs","السولار",cnt("dsl","بند"),dslHtml,"dsl",dotOf("dsl"))}
   ${sec("x","drop","cs","المياه",d.wat.length?d.wat.reduce((a,x)=>a+n0(x.n),0)+" نقلة · "+cnt("wat","بند"):"لا يوجد",watHtml,"wat",dotOf("wat"))}
   ${sec("e","rcpt","cs","المصروفات النثرية",cnt("exp","بند"),expHtml,"exp",dotOf("exp"))}
@@ -1012,13 +1121,14 @@ function renderDayInner(main){
   // footer
   const foot=$("#foot");foot.hidden=false;
   const acts=[];
-  if((edit||aOpen)&&st!=="closed")acts.push(`<button class="btn gold" data-day="close">إقفال اليومية</button>`);
+  if(ownLock()&&S.odraft[date])acts.push(`<span data-oprop="1" style="display:contents"><button class="btn ghost" data-day="odiscard">إلغاء التعديل</button><button class="btn gold" data-day="opropose">إرسال للمحاسب</button></span>`);
+  else if((edit||aOpen)&&st!=="closed")acts.push(`<button class="btn gold" data-day="close">إقفال اليومية</button>`);
   if(st==="closed"&&S.role==="accountant")acts.push(`<button class="btn gold" data-day="request">طلب تعديل</button>`);
   if(st==="closed"&&isOwner()&&!day.approved)acts.push(`<button class="btn ghost" data-day="reopen">فتح</button><button class="btn gold" data-day="approve">اعتماد</button>`);
   else if(st==="closed"&&isOwner())acts.push(`<button class="btn gold" data-day="reopen">فتح للتعديل</button>`);
   const stTxt=st==="closed"?(day.approved?"مقفولة · معتمدة":"مقفولة · بانتظار الاعتماد"):st==="open"?"يومية مفتوحة":"يومية جديدة";
   foot.innerHTML=`<div class="foot-in"><span class="flock">${IC(edit?"unlock":"lock",18)}</span><div class="fstat"><b class="mny">التكلفة <span class="num" id="ftCost">—</span></b><span class="dot" id="saveDot"></span> <span id="saveTxt">${edit?stTxt+" · جاهز":stTxt}</span></div><div class="fact">${isEng()?"":`<button class="fib" data-day="pdf" title="تقرير PDF" aria-label="تقرير PDF">${IC("pdf",18)}</button><button class="fib" data-day="wa" title="ملخص واتساب" aria-label="ملخص واتساب">${IC("wa",18)}</button>`}${acts.join("")}</div></div>`;
-  updateDayTotals();
+  updateDayTotals();if(ownLock()&&S.odraft[date])setSave("busy",`تعديل فى ${dayDiff(normDay(clone(S.days[date]||{}),date),S.cur).length} قسم – لم يُرسل للمحاسب`);
   main.querySelectorAll("#dayForm input").forEach(i=>{i.enterKeyHint="next"});
 }
 function fieldSubs(date){const m=M();return(m.users||[]).filter(u=>u.role==="field"&&u.active!==false).map(u=>{const ids=[u.uid,...(u.old||[])].map(x=>safe(date+"_"+x));const id=ids.find(x=>S.entries[x]);const e=id?S.entries[id]:null;return{u,id,e,sub:!!(e&&e.sub)}})}
@@ -1053,6 +1163,7 @@ function closeSummary(date){const m=M(),d=mergedDay(date,true),y=mergedDay(addDa
 $("#main").addEventListener("input",e=>{
   if(S.tab!=="day"||!S.cur)return;const t=e.target;
   if(t.id==="dayDate"){if(t.value){openDay(t.value);render()}return}
+  if(t.dataset.qk){qkRead();qkHint();return}
   if(t.dataset.notes){S.cur.notes=t.value;markDirty();return}
   if(t.dataset.exf){setEx(t.dataset.exf,t.dataset.id,{[t.dataset.k]:t.value});return}
   if(t.dataset.evln){if(!canEditDay(S.cur.date))return;const[k,id]=t.dataset.evln.split("|");S.cur.evl=S.cur.evl||[];evlSet(S.cur.evl,k,id,{n:t.value});markDirty();return}
@@ -1074,9 +1185,10 @@ $("#main").addEventListener("input",e=>{
 $("#main").addEventListener("click",e=>{if(e.target.id==="dayDate"&&e.target.showPicker){try{e.target.showPicker()}catch(x){}}});
 $("#main").addEventListener("toggle",e=>{const d=e.target;if(!d.dataset||!d.dataset.sec)return;S.secOpen=S.secOpen||{};S.secOpen[d.dataset.sec]=d.open?1:0;lsSet("zf_secopen",S.secOpen)},true);
 $("#main").addEventListener("change",e=>{if(S.tab!=="day")return;const t=e.target;if((t.tagName==="SELECT"&&t.dataset.arr&&["src","w","acc"].includes(t.dataset.k))||(t.dataset.arr==="pay"&&t.dataset.k==="a")||(t.dataset.arr==="exp"&&t.dataset.k==="a")){saveDay();setTimeout(render,0)}});
-$("#main").addEventListener("keydown",e=>{if(S.tab!=="day"||e.key!=="Enter")return;const t=e.target;if(t.tagName!=="INPUT"||!t.closest("#dayForm"))return;e.preventDefault();const all=[...document.querySelectorAll("#dayForm input:not([disabled]),#dayForm select:not([disabled])")].filter(x=>x.offsetParent!==null);const i=all.indexOf(t);if(i>=0&&all[i+1])all[i+1].focus();else t.blur()});
+$("#main").addEventListener("keydown",e=>{if(S.tab!=="day"||e.key!=="Enter")return;const t=e.target;if(t.tagName!=="INPUT"||!t.closest("#dayForm"))return;
+  if(t.dataset.qk){e.preventDefault();qkRead();const amt=num(S.qk.a)!==null||(["wat","dsl"].includes(S.qk.t)&&num(S.qk.q)!==null);if(amt&&(t.id==="qkA"||t.id==="qkN"||t.id==="qkQ"||t.id==="qkP"))qkAdd();else{const L=[...document.querySelectorAll("#dayForm [data-qk]")];const i=L.indexOf(t);if(L[i+1])L[i+1].focus()}return}e.preventDefault();const all=[...document.querySelectorAll("#dayForm input:not([disabled]),#dayForm select:not([disabled])")].filter(x=>x.offsetParent!==null);const i=all.indexOf(t);if(i>=0&&all[i+1])all[i+1].focus();else t.blur()});
 function setEx(key,id,patch){
-  const ents=entryDocsFor(S.cur.date);for(const[eid,e]of ents){const r=(e[key]||[]).find(z=>z.id===id);if(r){Object.assign(r,patch);saveEntryDoc(eid);return}}
+  const ents=entryDocsFor(S.cur.date);for(const[eid,e]of ents){const r=(e[key]||[]).find(z=>z.id===id);if(r){if(ownLock()){toast("هذا السطر من إدخال المشرف – يصححه المحاسب");render();return}Object.assign(r,patch);saveEntryDoc(eid);return}}
   let r=S.cur[key].find(z=>z.id===id);if(!r){r={id};S.cur[key].push(r)}Object.assign(r,patch);
   if(!r.k&&!n0(r.ot)&&!n0(r.dh)&&!r.r)S.cur[key]=S.cur[key].filter(z=>z!==r);markDirty();
 }
@@ -1117,19 +1229,83 @@ function copyHourly(only){const y=mergedDay(addDays(S.cur.date,-1),false);const 
     const row={e:h.e};if(h.s)row.s=h.s;if(h.t)row.t=h.t;if(!h.s&&!h.t&&h.h)row.h=h.h;S.cur.hourly.push(row);done.add(h.e);n++});return n}
 async function dayAction(a){
   const date=S.cur.date;
+  if(a==="opropose"){if(S.dirty)await saveDay();const dr=S.odraft[date];if(!dr)return toast("لا توجد تعديلات");const base=normDay(clone(S.days[date]||{}),date);const keys=dayDiff(base,dr);
+    const ok=await modal({title:"إرسال التعديل للمحاسب – "+dd(date),body:`<p>الأقسام المعدّلة: <b>${keys.map(k=>KN[k]||k).join("، ")}</b></p><p class="small muted">التعديل لن يُطبق على اليومية إلا بعد موافقة المحاسب.</p><label class="f">سبب التعديل<textarea name="reason" placeholder="مثال: تصحيح ساعات البلدوزر حسب السركى"></textarea></label>`,ok:"إرسال"});if(!ok)return;
+    try{await proposeDay(date,dr,(ok.reason||"").trim(),"day");delete S.odraft[date];saveODraft();S.cur=normDay(clone(S.days[date]||{}),date);toast("تم إرسال التعديل للمحاسب – بانتظار موافقته");render()}catch(x){toast("تعذر الإرسال: "+errMsg(x))}return}
+  if(a==="odiscard"){const ok=await modal({title:"إلغاء التعديل",body:"<p>هل تريد إلغاء تعديلاتك على هذا اليوم والرجوع للنسخة الحالية؟</p>",ok:"إلغاء التعديل",danger:true});if(!ok)return;delete S.odraft[date];saveODraft();S.dirty=false;S.cur=normDay(clone(S.days[date]||{}),date);render();return}
+  if(a==="close"&&ownLock()&&S.odraft[date])return toast("أرسل تعديلاتك للمحاسب أو ألغها قبل الإقفال");
   if(a==="close"){if(S.dirty)await saveDay();const t=dayTotals(date);
     const nsub=fieldSubs(date).filter(x=>!x.sub);
     const ok=await modal({title:"إقفال يومية "+dd(date),body:`${nsub.length?`<div class="alert warn"><b>لم يسلّم بعد:</b> ${nsub.map(x=>esc(x.u.name)).join("، ")} – بعد الإقفال لن يستطيعوا الإضافة.</div>`:""}<p>أعمال اليوم: <b>${money(t.works)}</b> ج – منصرف من الخزنة: <b>${money(t.out)}</b> ج – وارد: <b>${money(t.inn)}</b> ج.</p>${closeSummary(date)}<p class="small muted">بعد الإقفال لا يمكن التعديل إلا بموافقة المالك، وسيتم تجهيز تقرير PDF.</p>`,ok:"إقفال وتجهيز التقرير"});if(!ok)return;
     const day=normDay(clone(S.cur),date);day.status="closed";day.closedAt=new Date().toISOString();day.closedBy=S.uid||"";logAct(day,"إقفال اليومية");
-    try{await put("days/"+date,day);S.cur=day;toast("تم إقفال اليومية");render();dailyPdf(date)}catch(e){toast("تعذر الإقفال")}}
+    try{await ownPut(date,day,["status","closedAt","closedBy","log"]);S.cur=day;toast("تم إقفال اليومية");render();dailyPdf(date)}catch(e){toast("تعذر الإقفال")}}
   else if(a==="request"){await modal({title:"طلب تعديل يومية "+dd(date),body:`<label class="f">سبب التعديل المطلوب<textarea name="reason" required></textarea></label>`,ok:"إرسال الطلب",onOk:async v=>{if(!v.reason.trim())return"اكتب السبب";await put("requests/"+uid("r"),{date,reason:v.reason.trim(),by:S.uid||"",at:new Date().toISOString(),status:"pending"});toast("تم إرسال الطلب للمالك")}})}
-  else if(a==="reopen"){const ok=await modal({title:"فتح اليومية للتعديل",body:`<label class="f">السبب<input name="note"></label>`,ok:"فتح"});if(!ok)return;const day=normDay(clone(S.days[date]),date);day.status="open";day.approved=false;logAct(day,"فتح للتعديل بواسطة المالك",ok.note);await put("days/"+date,day);S.cur=day;render()}
+  else if(a==="reopen"){const ok=await modal({title:"فتح اليومية للتعديل",body:`<label class="f">السبب<input name="note"></label>`,ok:"فتح"});if(!ok)return;const day=normDay(clone(S.days[date]),date);day.status="open";day.approved=false;logAct(day,"فتح للتعديل بواسطة المالك",ok.note);await ownPut(date,day,["status","approved","log"]);S.cur=day;render()}
   else if(a==="approve"){await approveDay(date);toast("تم اعتماد اليومية");render()}
   else if(a==="pdf")dailyPdf(date);
   else if(a==="wa")waModal(dailySummary(date),"ملخص يومية "+dd(date));
 }
 async function approveDay(date,silent){const day=normDay(clone(S.days[date]),date);day.approved=true;day.approvedAt=new Date().toISOString();day.approvedBy=S.uid||"";logAct(day,"اعتماد المالك");
-  await put("sealed/"+date,{date,content:contentOfMerged(date),approvedAt:day.approvedAt,approvedBy:day.approvedBy});await put("days/"+date,day)}
+  await put("sealed/"+date,{date,content:contentOfMerged(date),approvedAt:day.approvedAt,approvedBy:day.approvedBy});await ownPut(date,day,["approved","approvedAt","approvedBy","log"])}
+
+/* ============================================================ QUICK CASH ENTRY (حركة خزنة سريعة) */
+const QKT=[["pay","دفعة","pay"],["adv","سلفة","coin"],["exp","مصروف","rcpt"],["wat","مياه","drop"],["dsl","سولار","fuel"],["inc","وارد","inb"]];
+function qkFavs(t,date){const m=M();const ds=Object.keys(S.days).filter(d=>d<=date&&d>=addDays(date,-45)).sort().reverse();const cnt={};let o=0;const add=(k,l)=>{if(!k||!l)return;cnt[k]=cnt[k]||{l,n:0,o:o++};cnt[k].n++};
+  ds.forEach(d=>{const x=S.days[d]||{};
+    if(t==="pay")(x.pay||[]).forEach(r=>add(r.acc,accName(r.acc)));
+    if(t==="adv")(x.adv||[]).forEach(r=>{if(r.w)add(r.w,(byId(m.workers,r.w)||{}).name)});
+    if(t==="exp")(x.exp||[]).forEach(r=>{if(r.c||r.d)add((r.c||"")+"|"+(r.d||""),r.d||r.c)});
+    if(t==="wat")(x.wat||[]).forEach(r=>add(r.s,r.s));
+    if(t==="dsl")(x.dsl||[]).forEach(r=>add(r.e,(byId(m.monthly,r.e)||byId(m.hourly,r.e)||{}).name));
+    if(t==="inc")(x.inc||[]).forEach(r=>{if(r.src==="partner")add(r.p,(byId(m.partners,r.p)||{}).name)})});
+  return Object.entries(cnt).sort((a,b)=>b[1].n-a[1].n||a[1].o-b[1].o).slice(0,8)}
+function qkRead(){const q=S.qk;["W","A","M","N","C","D","Q","P"].forEach(k=>{const el=document.getElementById("qk"+k);if(el)q[k.toLowerCase()]=el.value})}
+function qkHintTxt(){const q=S.qk;const CP=S.qkCP;if(q.t==="pay"&&q.w&&CP&&CP.acc[q.w]){const b=CP.acc[q.w].bal;return b>=0?`مستحق له الآن: <b class="num">${money(b)}</b> ج`+(num(q.a)>b+0.5?' <span class="wtag">⚠ المبلغ أكبر من المستحق</span>':""):`مدفوع له زيادة: <b class="num">${money(-b)}</b> ج`}
+  if(q.t==="wat"){const v=num(q.a)??(n0(q.q)*n0(q.p));return v?`قيمة المياه: <b class="num">${money(v)}</b> ج`:""}
+  if(q.t==="dsl"){const v=num(q.a)??(n0(q.q)*(rateAt(M().dieselPrices,S.cur.date)||0));return v?`قيمة السولار: <b class="num">${money(v)}</b> ج`:""}
+  if(num(q.a)>=50000)return'<span class="wtag">⚠ مبلغ كبير – تأكد من الرقم</span>';return""}
+function qkHint(){const h=document.getElementById("qkHint");if(h)h.innerHTML=qkHintTxt()}
+function qkCard(date,CP,edit){const m=M();const q=S.qk;const t=q.t;S.qkCP=CP;
+  const O=(id,l,list,v,blank)=>`<label class="f">${l}<select id="${id}" data-qk="1">${opts(list,v,blank)}</select></label>`;
+  const N=(id,l,v,ph,dec,cls)=>`<label class="f${cls?" "+cls:""}">${l}<input id="${id}" data-qk="1" ${dec?'inputmode="decimal"':""} value="${esc(v||"")}" placeholder="${esc(ph||"")}" enterkeyhint="${id==="qkA"?"done":"next"}" autocomplete="off"></label>`;
+  let who="";
+  if(t==="pay")who=O("qkW","لمين",[...m.suppliers.map(s=>["sup:"+s.id,s.name]),...m.workers.map(w=>["wrk:"+w.id,w.name+" (عامل)"])],q.w,"— اختر الحساب —");
+  else if(t==="adv")who=O("qkW","العامل",m.workers.filter(w=>isActive(w,date)||w.id===q.w).map(w=>[w.id,w.name]),q.w,"— اختر العامل —");
+  else if(t==="exp")who=O("qkC","التصنيف",m.cats,q.c||"","— التصنيف —")+N("qkD","البيان",q.d,"مثال: عشاء العمال");
+  else if(t==="wat")who=N("qkW","المورد",q.w,"مورد المياه")+N("qkQ","النقلات",q.q,"0",1,"sm")+N("qkP","سعر النقلة",q.p,"0",1,"sm");
+  else if(t==="dsl")who=O("qkW","المعدة",[...m.monthly,...m.hourly].filter(e=>isActive(e,date)||e.id===q.w).map(e=>[e.id,e.name]),q.w,"أخرى / مولد")+N("qkQ","لترات",q.q,"0",1,"sm");
+  else if(t==="inc")who=O("qkW","من الشريك",m.partners.map(p=>[p.id,p.name]),q.w,"— الشريك —");
+  const favs=edit?qkFavs(t,date):[];
+  const rows=[];[["pay","دفعة"],["adv","سلفة"],["exp","مصروف"],["wat","مياه"],["dsl","سولار"],["inc","وارد"]].forEach(([k,l])=>(S.cur[k]||[]).forEach((r,i)=>{const a=k==="dsl"?dieselAmount(r,date):k==="wat"?watAmt(r):n0(r.a);if(!a)return;const[pt,dt]=rowParts(k,r,date);rows.push({k,i,l,pt,dt:k==="pay"||k==="adv"||k==="exp"||k==="inc"?(k==="exp"&&r.c&&r.d?r.c:r.n||""):dt.replace(/ · [\d,.]+ ج$/,"").replace(/^[\d,.]+ ج$/,""),a,m:r.m||"",inn:k==="inc"})}));
+  let op=0;Object.entries(CP.daily||{}).forEach(([d,v])=>{if(d<date)op+=v.cashIn-v.cashOut});const T=dayTotals(date);
+  const sum=rows.filter(r=>!r.inn).reduce((a,r)=>a+r.a,0);
+  return`<div class="qk"><div class="qkh"><span class="sic cs">${IC("wallet",18)}</span><div class="grow"><b>حركة خزنة سريعة</b><small>${edit?"اختر النوع ← لمين ← المبلغ ← Enter":"حركات الخزنة فى هذا اليوم"}</small></div></div>
+  <div class="qkbal"><div><small>رصيد أول اليوم</small><b class="num">${money(op)}</b></div><div><small>وارد اليوم</small><b class="num in">${money(T.inn)}</b></div><div><small>منصرف اليوم</small><b class="num out">${money(T.out)}</b></div><div class="hi"><small>رصيد آخر اليوم</small><b class="num">${money(op+T.inn-T.out)}</b></div></div>
+  ${edit?`<div class="qkt" role="tablist">${QKT.map(([k,l,ic])=>`<button type="button" data-qkt="${k}" aria-pressed="${k===t}">${IC(ic,15)}<span>${l}</span></button>`).join("")}</div>
+  ${favs.length?`<div class="qkfav"><span>متكرر:</span>${favs.map(([k,v])=>`<button type="button" data-qkf="${esc(k)}" aria-pressed="${(t==="exp"?(q.c||"")+"|"+(q.d||""):q.w)===k}">${esc(v.l)}</button>`).join("")}</div>`:""}
+  <div class="qkf">${who}${N("qkA",t==="wat"||t==="dsl"?"أو المبلغ":"المبلغ",q.a,"0",1,"amt")}${O("qkM","الطريقة",METHODS,q.m||"نقدى",false)}${t==="exp"?"":N("qkN","ملاحظة",q.n,"")}<button type="button" class="btn pri qkgo" data-qkadd="1">${IC("plus",16)} تسجيل</button></div>
+  <div class="small qkhint" id="qkHint">${qkHintTxt()}</div>`:""}
+  ${rows.length?`<div class="qkl">${rows.map(r=>`<div class="qr"><span class="pill ${r.inn?"ok":r.k==="adv"?"warn":""}">${r.l}</span><div class="qn"><b>${esc(r.pt)}</b>${r.dt||r.m?`<small>${esc([r.dt,r.m].filter(Boolean).join(" · "))}</small>`:""}</div><span class="num qa ${r.inn?"in":"out"}" dir="ltr">${r.inn?"+":"−"}${money(r.a)}</span>${edit&&!(ownLock()&&false)?`<button type="button" class="x" data-qdel="${r.k}|${r.i}" aria-label="حذف">×</button>`:""}</div>`).join("")}<div class="qr qt"><span></span><div class="qn"><b>إجمالى المنصرف (${(n=>n+" "+(n>=3&&n<=10?"حركات":"حركة"))(rows.filter(r=>!r.inn).length)})</b></div><span class="num qa out" dir="ltr">−${money(sum)}</span>${edit?"<span></span>":""}</div></div>`:`<p class="small muted" style="margin:8px 2px 0">لا توجد حركات خزنة فى هذا اليوم.</p>`}
+  </div>`}
+function qkErr(t){toast(t);return false}
+function qkAdd(){if(!S.cur||!canEditDay(S.cur.date))return;qkRead();const q=S.qk,t=q.t,date=S.cur.date;const a=num(q.a);const m=q.m||"نقدى";let row=null,label="";
+  if(t==="pay"){if(!q.w)return qkErr("اختر الحساب");if(!a)return qkErr("اكتب المبلغ");row={acc:q.w,a,m,n:q.n||"",per:date.slice(0,7)};label=accName(q.w)}
+  else if(t==="adv"){if(!q.w)return qkErr("اختر العامل");if(!a)return qkErr("اكتب المبلغ");row={w:q.w,a,m,n:q.n||""};label=(byId(M().workers,q.w)||{}).name}
+  else if(t==="exp"){if(!q.c&&!(q.d||"").trim())return qkErr("اختر التصنيف أو اكتب البيان");if(!a)return qkErr("اكتب المبلغ");row={d:(q.d||"").trim()||q.c,c:q.c||"",a,m,rc:""};label=row.d}
+  else if(t==="wat"){const n=num(q.q),pr=num(q.p);if(!a&&!(n&&pr))return qkErr("اكتب النقلات والسعر أو المبلغ");row={s:(q.w||"").trim(),m,nt:q.n||""};if(n)row.n=n;if(pr)row.p=pr;if(a)row.a=a;label=row.s||"مياه"}
+  else if(t==="dsl"){const l=num(q.q);if(!a&&!l)return qkErr("اكتب اللترات أو المبلغ");row={e:q.w||"",n:q.n||""};if(l)row.l=l;if(a)row.a=a;label="سولار"}
+  else if(t==="inc"){if(!a)return qkErr("اكتب المبلغ");row={src:"partner",p:q.w||"",a,m,n:q.n||""};label="وارد"}
+  if(!row)return;S.cur[t].push(row);markDirty();
+  const keep={t,m};if(t==="exp")keep.c=q.c;if(t==="wat"){keep.w=q.w;keep.p=q.p}S.qk=keep;
+  S.qkFocus=t==="exp"?"qkD":t==="wat"?"qkQ":"qkW";toast("تم تسجيل: "+(label||"")+" – "+money(t==="wat"?watAmt(row):t==="dsl"?dieselAmount(row,date):a)+" ج");render()}
+$("#main").addEventListener("click",e=>{if(S.tab!=="day"||!S.cur)return;const b=e.target.closest("[data-qkt],[data-qkf],[data-qkadd],[data-qdel]");if(!b)return;
+  if(b.dataset.qkt){qkRead();const keepM=S.qk.m;S.qk={t:b.dataset.qkt,m:keepM};S.qkFocus="qkW";if(b.dataset.qkt==="exp")S.qkFocus="qkC";render();return}
+  if(b.dataset.qkf){qkRead();const k=b.dataset.qkf;if(S.qk.t==="exp"){const[c,d]=k.split("|");S.qk.c=c;S.qk.d=d}else{S.qk.w=k;if(S.qk.t==="wat"){const last=Object.keys(S.days).sort().reverse().map(d=>(S.days[d].wat||[]).slice().reverse().find(r=>r.s===k&&n0(r.p))).find(Boolean);if(last)S.qk.p=String(last.p)}}S.qkFocus=S.qk.t==="wat"?"qkQ":S.qk.t==="dsl"?"qkQ":"qkA";render();return}
+  if(b.dataset.qkadd){qkAdd();return}
+  if(b.dataset.qdel){if(!canEditDay(S.cur.date))return;const[k,i]=b.dataset.qdel.split("|");const r=S.cur[k][+i];if(!r)return;modal({title:"حذف الحركة",body:`<p>حذف: <b>${esc(rowTxt(k,r,S.cur.date))}</b>؟</p>`,ok:"حذف",danger:true}).then(ok=>{if(!ok)return;S.cur[k].splice(+i,1);markDirty();render()});return}});
+$("#main").addEventListener("change",e=>{if(S.tab!=="day")return;const t=e.target;if(!t.dataset.qk)return;qkRead();
+  if(t.id==="qkW"&&S.qk.t==="wat"&&!S.qk.p){const last=Object.keys(S.days).sort().reverse().map(d=>(S.days[d].wat||[]).slice().reverse().find(r=>r.s===t.value&&n0(r.p))).find(Boolean);if(last){S.qk.p=String(last.p);const el=$("#qkP");if(el)el.value=last.p}}
+  qkHint();if(t.tagName==="SELECT"&&t.id==="qkW"){const nx=$("#qkA");if(nx)nx.focus()}});
 
 /* ============================================================ WORK TYPE (where each machine works) */
 const WT={rock:"حفر صخري",soil:"حفر عادي",fill:"طبقات ردم",gen:"عام"};const WTK=["rock","soil","fill","gen"];
@@ -1560,6 +1736,7 @@ $("#main").addEventListener("click",async e=>{if(S.tab!=="acc"||S.acc!=="due")re
   if(k==="post"){const today=todayStr();if(!canEditDay(today))return toast("يومية اليوم مقفولة");const rows=dueRows(c).filter(r=>r.sel&&n0(r.amt)>0);if(!rows.length)return toast("لا توجد دفعات مختارة");const pay=rows.reduce((s,r)=>s+n0(r.amt),0);
     const ok=await modal({title:"تسجيل الدفعات",body:`<p>سيتم تسجيل <b>${rows.length}</b> دفعة بإجمالى <b>${money(pay)}</b> ج فى يومية ${dd(today)} (نقدى).</p><p class="small muted">يمكنك تعديل طريقة السداد أو الملاحظة لكل دفعة من اليومية بعد التسجيل.</p>`,ok:"تسجيل"});if(!ok)return;
     if(S.dirty)await saveDay();const day=normDay(clone(S.days[today]||{}),today);rows.forEach(r=>day.pay.push({acc:r.a.key,a:n0(r.amt),m:"نقدى",n:`سداد ${fmt(S.duePct??100)}% من المستحق`,per:today.slice(0,7)}));logAct(day,"تسجيل دفعات من كشف المستحقات",money(pay));
+    if(ownLock()){try{await proposeDay(today,day,`دفعات من كشف المستحقات (${rows.length} دفعة – ${money(pay)} ج)`,"due");S.dueAmt={};toast("تم إرسال الدفعات للمحاسب – تُسجل بعد موافقته");render()}catch(x){toast("تعذر الإرسال: "+errMsg(x))}return}
     try{await put("days/"+today,day);if(S.cur&&S.cur.date===today)S.cur=normDay(clone(day),today);S.dueAmt={};toast("تم تسجيل الدفعات فى يومية اليوم");render()}catch(x){toast("تعذر التسجيل: "+errMsg(x))}}});
 async function statementAction(kind){
   const c=compute();
@@ -1692,7 +1869,7 @@ async function importPreview(file){
   IMP=out;const dts=Object.keys(out).sort();
   $("#impPrev").innerHTML=`<div class="alert ${errs.length?"warn":"ok"}" style="margin-top:10px">عدد الحركات الصالحة: <b>${cnt}</b> على ${dts.length} يوم (${dts.length?dd(dts[0])+" – "+dd(dts[dts.length-1]):""}) – إجمالى المبالغ: <b>${money(sum)}</b></div>${errs.length?`<div class="small" style="color:var(--bad)">${errs.slice(0,15).map(esc).join("<br>")}${errs.length>15?"<br>…":""}</div>`:""}${cnt?`<button class="btn pri" data-impok="1" style="margin-top:8px">تأكيد الاستيراد</button>`:""}`;
 }
-async function importCommit(){if(!IMP)return;const dts=Object.keys(IMP).sort();let i=0;for(const d of dts){const day=normDay(clone(S.days[d]||{}),d);Object.entries(IMP[d]).forEach(([k,v])=>{day[k]=day[k].concat(v)});logAct(day,"استيراد بيانات سابقة");await put("days/"+d,day);i++;$("#impPrev").innerHTML=`<div class="alert info">جاري الحفظ… ${i}/${dts.length}</div>`}IMP=null;$("#impPrev").innerHTML=`<div class="alert ok">تم استيراد ${dts.length} يوم بنجاح.</div>`;toast("تم الاستيراد")}
+async function importCommit(){if(!IMP)return;const dts=Object.keys(IMP).sort();let i=0;for(const d of dts){const day=normDay(clone(S.days[d]||{}),d);Object.entries(IMP[d]).forEach(([k,v])=>{day[k]=day[k].concat(v)});logAct(day,"استيراد بيانات سابقة");if(ownLock())await proposeDay(d,day,"استيراد بيانات سابقة","import");else await put("days/"+d,day);i++;$("#impPrev").innerHTML=`<div class="alert info">جاري الحفظ… ${i}/${dts.length}</div>`}IMP=null;$("#impPrev").innerHTML=ownLock()?`<div class="alert info">تم إرسال ${dts.length} يوم للمحاسب – تُضاف بعد موافقته.</div>`:`<div class="alert ok">تم استيراد ${dts.length} يوم بنجاح.</div>`;toast("تم الاستيراد")}
 
 /* ============================================================ SETTINGS */
 const ENT={
@@ -1780,9 +1957,11 @@ async function backupRestore(file){const msg=$("#bakMsg");let data;try{data=JSON
   const ok=await modal({title:"استعادة البيانات",body:`<p>سيتم حفظ: الإعدادات والبيانات الثابتة + ${counts[0]} يومية + ${counts[1]} إدخال مشرفين + ${counts[2]} نسخة معتمدة + ${counts[3]} طلب.</p><p class="small muted">المستخدمون الحاليون يبقون كما هم. الأيام بنفس التاريخ تُستبدل بنسخة الملف.</p>`,ok:"استعادة"});if(!ok)return;
   const cur=M();const nm=normMaster(clone(data.master));nm.users=cur.users||[];nm.legacyNames=Object.assign({},data.master.legacyNames||{},cur.legacyNames||{});
   (data.master.users||[]).forEach(u=>{if(u&&u.uid&&u.name&&!nm.users.some(x=>x.uid===u.uid))nm.legacyNames[u.uid]=u.name});
-  const ops=[["master/main",nm]];K.forEach(k=>Object.entries(data[k]||{}).forEach(([id,v])=>{ops.push([k+"/"+id,v]);if(k==="days")ops.push(["dstat/"+id,{status:v.status||"open",approved:!!v.approved}])}));
+  const ops=[["master/main",nm]];let np=0;const at=new Date().toISOString();K.forEach(k=>Object.entries(data[k]||{}).forEach(([id,v])=>{
+    if(ownLock()&&(k==="days"||k==="entries")){np++;ops.push(["chg/"+uid("c"),{kind:"full",path:k+"/"+id,date:k==="days"?id:(v.date||""),after:v,by:S.uid||"",at,status:"pending",reason:"استعادة نسخة احتياطية",src:"restore"}]);return}
+    ops.push([k+"/"+id,v]);if(k==="days")ops.push(["dstat/"+id,{status:v.status||"open",approved:!!v.approved}])}));
   try{let n=0;for(let i=0;i<ops.length;i+=100){const bt=S.db.batch();ops.slice(i,i+100).forEach(([p,v])=>bt.set(S.db.doc(p),clone(v)));await fbWait(bt.commit());n+=Math.min(100,ops.length-i);msg.textContent=`جارٍ الحفظ… ${n}/${ops.length}`}
-    await syncRoles(nm);msg.innerHTML='<b style="color:var(--ok)">تمت الاستعادة بنجاح.</b>';toast("تمت الاستعادة")}catch(e){msg.textContent="تعذرت الاستعادة: "+errMsg(e)}}
+    await syncRoles(nm);msg.innerHTML=np?`<b style="color:var(--ok)">تمت استعادة الإعدادات.</b> اليوميات وإدخالات المشرفين (${np}) اتبعتت للمحاسب وتُستعاد بعد موافقته.`:'<b style="color:var(--ok)">تمت الاستعادة بنجاح.</b>';toast("تمت الاستعادة")}catch(e){msg.textContent="تعذرت الاستعادة: "+errMsg(e)}}
 $("#main").addEventListener("change",e=>{if(S.tab==="set"&&e.target.id==="bakFile"&&e.target.files[0]){const f=e.target.files[0];e.target.value="";backupRestore(f)}});
 function fieldHtml(f,it){const[k,label,type,req,extra,show]=f;const df=show?` data-for="${show}"`:"";const v=it?(k==="rate"?(rateAt(it.rates,todayStr())??""):k==="otr"?(rateAt(it.ot,todayStr())??""):(it[k]??"")):"";
   if(type==="note")return`<p class="small muted"${df} style="grid-column:1/-1;margin:0">${esc(label)}</p>`;

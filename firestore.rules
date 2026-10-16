@@ -18,6 +18,17 @@ service cloud.firestore {
     function isEng() { return activeRole('engineer'); }
     function isMgr() { return isOwner() || isAcc(); }
     function isMember() { return isOwner() || isAcc() || isField() || isEng(); }
+    // a pending owner change (chg/{id}) that the accountant is applying to this exact path
+    function chgFor(p) {
+      return request.resource.data.get('chg', '') != ''
+        && exists(/databases/$(database)/documents/chg/$(request.resource.data.chg))
+        && get(/databases/$(database)/documents/chg/$(request.resource.data.chg)).data.status == 'pending'
+        && get(/databases/$(database)/documents/chg/$(request.resource.data.chg)).data.path == p;
+    }
+    // fields the owner may change directly on a day: closing / approving / ratings / work type (no money)
+    function ownerFree() {
+      return ['date', 'evl', 'wtc', 'status', 'approved', 'approvedAt', 'approvedBy', 'closedAt', 'closedBy', 'log', 'updatedAt', 'updatedBy'];
+    }
     function dayClosed(d) {
       return exists(/databases/$(database)/documents/dstat/$(d))
         && get(/databases/$(database)/documents/dstat/$(d)).data.status == 'closed';
@@ -50,11 +61,16 @@ service cloud.firestore {
     }
     match /days/{d} {
       allow read: if isMgr() || isEng();
-      allow write: if isOwner();
-      // accountant enters and edits an open day (and closes it); a closed day changes only with the owner
+      // the owner never writes numbers directly: only close / reopen / approve / ratings / work type.
+      // any change in the numbers goes to /chg and is applied by the accountant after his approval
+      allow create: if isOwner() && request.resource.data.keys().hasOnly(ownerFree());
+      allow update: if isOwner() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(ownerFree());
+      // accountant enters and edits an open day (and closes it)
       allow create: if isAcc() && request.resource.data.get('approved', false) == false;
       allow update: if isAcc() && resource.data.get('status', 'open') != 'closed'
         && request.resource.data.get('approved', false) == false;
+      // accountant applies an owner change he approved (also on a closed day); approval is reset
+      allow create, update: if isAcc() && chgFor('days/' + d) && request.resource.data.get('approved', false) == false;
     }
     match /dstat/{d} {
       allow read: if isMember();
@@ -62,7 +78,12 @@ service cloud.firestore {
     }
     match /entries/{id} {
       allow read: if isMgr() || isEng() || (signedIn() && resource.data.by == request.auth.uid);
-      allow write: if isOwner();
+      // owner may only reopen a supervisor hand-in
+      allow update: if isOwner() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sub', 'subAt']);
+      // accountant corrects supervisor entries of an open day
+      allow update: if isAcc() && !dayClosed(resource.data.date)
+        && request.resource.data.by == resource.data.by && request.resource.data.date == resource.data.date;
+      allow create, update: if isAcc() && chgFor('entries/' + id);
       allow create, update: if (isAcc() || isField())
         && request.resource.data.by == request.auth.uid
         && id == request.resource.data.date + '_' + request.auth.uid
@@ -75,6 +96,19 @@ service cloud.firestore {
     match /prod/{id} {
       allow read: if isMgr() || isEng();
       allow write: if isOwner() || isEng();
+    }
+    // owner change requests: the owner proposes, only the accountant approves or rejects
+    match /chg/{id} {
+      allow read: if isMgr();
+      allow create: if isOwner() && request.resource.data.by == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if isAcc() && resource.data.status == 'pending'
+        && request.resource.data.status in ['ok', 'no']
+        && request.resource.data.decidedBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedBy', 'decidedAt', 'dnote']);
+      allow update: if isOwner() && resource.data.by == request.auth.uid && resource.data.status == 'pending'
+        && request.resource.data.status == 'cancel'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedAt']);
     }
     match /sealed/{d} {
       allow read: if isMgr();
