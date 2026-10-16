@@ -240,6 +240,17 @@ details.sec[open] .chev{transform:rotate(-45deg)}
 .dsum div{padding:9px 12px;min-width:0}.dsum div+div{border-inline-start:1px solid var(--line)}
 .dsum small{display:block;font-size:11.5px;color:var(--muted)}.dsum b{font-size:17px;color:var(--navy);font-variant-numeric:tabular-nums}
 :root[data-theme="dark"] .dsum b{color:var(--ink)}
+.dsum2{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:4px}
+.dsum2 .dh{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:12px 14px 10px;position:relative;box-shadow:inset 0 -3px 0 var(--gold)}
+.dsum2 .dh small{display:block;color:var(--gold2);font-size:12.5px}.dsum2 .dh b{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.3px}.dsum2 .dh u{text-decoration:none;color:#AAB4CC;font-size:13px;margin-inline-start:6px}
+.dsum2 .dbk{padding:10px 14px 4px}
+.dbar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--sunk);gap:2px}.dbar i{display:block;height:100%}
+.dleg{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:8px;font-size:12px;color:var(--muted)}.dleg span{display:inline-flex;align-items:center;gap:5px}.dleg b{color:var(--ink);font-variant-numeric:tabular-nums}.dleg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.c0{background:#2F4F9A}.c1{background:#C9A227}.c2{background:#1F7A4A}.c3{background:#8FA2CC}.c4{background:#6B46A8}.c5{background:#D9730D}.c6{background:#2B9BA8}.c7{background:#B5475B}
+.dsum2 .drow{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);margin-top:8px}
+.dsum2 .drow div{padding:8px 12px;min-width:0}.dsum2 .drow div+div{border-inline-start:1px solid var(--line)}
+.dsum2 .drow small{display:block;font-size:11px;color:var(--muted)}.dsum2 .drow b{font-size:16px;color:var(--navy);font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .dsum2 .drow b{color:var(--ink)}
 /* footer action bar */
 .foot{position:fixed;z-index:44;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));background:var(--navy);color:#fff;border-radius:16px;box-shadow:0 10px 28px rgba(20,33,61,.28)}
 body.has-nav .foot{bottom:calc(var(--bnh) + 8px + env(safe-area-inset-bottom,0px))}
@@ -813,18 +824,21 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]
 
 /* ============================================================ DAY (manager) */
 function openDay(date){if(S.dirty)saveDay();S.date=date;S.cur=normDay(clone(S.days[date]||{}),date)}
-function dayTotals(date){const d=mergedDay(date,true);const m=M();let works=0,out=0,inn=0;
-  d.hourly.forEach(h=>{const e=byId(m.hourly,h.e);if(e)works+=hourlyHours(h)*(rateAt(e.rates,date)||0)});
-  d.trk.forEach(x=>{const t=byId(m.trucks,x.t);if(!t)return;works+=truckM3(x,t)*truckRate(t,date)});
-  d.itm.forEach(x=>{const it=byId(m.items,x.i);if(it)works+=n0(x.n)*itemRate(it,date)});
-  d.geo.forEach(g=>{const s=byId(m.suppliers,g.c);if(s)works+=n0(g.q)*(num(g.r)??(rateAt(s.rates,date)||0))});
+function dayTotals(date){const d=mergedDay(date,true);const m=M();let works=0,out=0,inn=0;const P={};let _w=0;const snap=k=>{P[k]=(P[k]||0)+works-_w;_w=works};
+  d.hourly.forEach(h=>{const e=byId(m.hourly,h.e);if(e)works+=hourlyHours(h)*(rateAt(e.rates,date)||0)});snap("h");
+  d.trk.forEach(x=>{const t=byId(m.trucks,x.t);if(!t)return;works+=truckM3(x,t)*truckRate(t,date)});snap("t");
+  d.itm.forEach(x=>{const it=byId(m.items,x.i);if(it)works+=n0(x.n)*itemRate(it,date)});snap("i");
+  d.geo.forEach(g=>{const s=byId(m.suppliers,g.c);if(s)works+=n0(g.q)*(num(g.r)??(rateAt(s.rates,date)||0))});snap("g");
   const isFri=dow(date)===5;
-  m.monthly.filter(e=>isActive(e,date)).forEach(e=>{const r=(rateAt(e.rates,date)||0)/26;const x=d.mex.find(z=>z.id===e.id);let v=isFri?0:r;if(x){if(x.k==="off"&&!isFri)v=0;else if(x.k==="half"&&!isFri)v=r/2;else if(x.k==="fri"&&isFri)v=r;v+=n0(x.ot)*(rateAt(e.ot,date)||0)}works+=v});
-  m.workers.filter(w=>isActive(w,date)).forEach(w=>{const r=(rateAt(w.rates,date)||0)/26;const x=d.wex.find(z=>z.id===w.id);let v=isFri?0:r;if(x){if(x.k==="off"&&!isFri)v=0;else if(x.k==="half"&&!isFri)v=r/2;else if(x.k==="fri"&&isFri)v=r;v+=n0(x.ot)*r/7-n0(x.dh)*r/7}works+=v});
-  d.exp.forEach(x=>{out+=n0(x.a);works+=n0(x.a)});d.dsl.forEach(x=>{const a=dieselAmount(x,date);out+=a;works+=a});d.pay.forEach(x=>out+=n0(x.a));d.adv.forEach(x=>out+=n0(x.a));d.inc.forEach(x=>inn+=n0(x.a));
-  return{works,out,inn,d};
+  m.monthly.filter(e=>isActive(e,date)).forEach(e=>{const r=(rateAt(e.rates,date)||0)/26;const x=d.mex.find(z=>z.id===e.id);let v=isFri?0:r;if(x){if(x.k==="off"&&!isFri)v=0;else if(x.k==="half"&&!isFri)v=r/2;else if(x.k==="fri"&&isFri)v=r;v+=n0(x.ot)*(rateAt(e.ot,date)||0)}works+=v});snap("m");
+  m.workers.filter(w=>isActive(w,date)).forEach(w=>{const r=(rateAt(w.rates,date)||0)/26;const x=d.wex.find(z=>z.id===w.id);let v=isFri?0:r;if(x){if(x.k==="off"&&!isFri)v=0;else if(x.k==="half"&&!isFri)v=r/2;else if(x.k==="fri"&&isFri)v=r;v+=n0(x.ot)*r/7-n0(x.dh)*r/7}works+=v});snap("w");
+  d.exp.forEach(x=>{out+=n0(x.a);works+=n0(x.a)});snap("e");d.dsl.forEach(x=>{const a=dieselAmount(x,date);out+=a;works+=a});snap("d");d.pay.forEach(x=>out+=n0(x.a));d.adv.forEach(x=>out+=n0(x.a));d.inc.forEach(x=>inn+=n0(x.a));
+  return{works,out,inn,d,P};
 }
-function updateDayTotals(){if(S.tab!=="day"||!S.cur)return;const t=dayTotals(S.cur.date);const w=$("#dsW"),o=$("#dsO"),i=$("#dsI");if(w){w.textContent=money(t.works);o.textContent=money(t.out);i.textContent=money(t.inn)}
+function updateDayTotals(){if(S.tab!=="day"||!S.cur)return;const t=dayTotals(S.cur.date);const w=$("#dsW"),o=$("#dsO"),i=$("#dsI");if(w){w.textContent=money(t.works);o.textContent=money(t.out);i.textContent=money(t.inn);const rr=$("#dsR");if(rr){const v=t.works-t.out;rr.textContent=money(v);rr.style.color=v>0.5?"var(--bad)":v<-0.5?"var(--ok)":""}
+    const pp=$("#dsP");if(pp){const L=[["h","معدات بالساعة"],["m","إيجار شهري"],["t","النقل"],["i","بنود بالعدد"],["g","مقاولين"],["w","العمالة"],["d","السولار"],["e","النثريات"]].filter(([k])=>Math.abs(t.P[k]||0)>0.5);const tot=t.works||1;
+      pp.innerHTML=L.length?`<div class="dbar">${L.map(([k],j)=>`<i style="width:${Math.max(1,(t.P[k]/tot*100)).toFixed(1)}%" class="c${j%8}"></i>`).join("")}</div><div class="dleg">${L.map(([k,l],j)=>`<span><i class="c${j%8}"></i>${l} <b>${money(t.P[k])}</b></span>`).join("")}</div>`:'<div class="small muted">لا توجد تكاليف مسجلة بعد</div>'}
+    const fc=$("#ftCost");if(fc)fc.textContent=money(t.works)}
   const m=M(),d=t.d,date=S.cur.date;
   const st={hourly:d.hourly.reduce((s,h)=>{const e=byId(m.hourly,h.e);return s+(e?hourlyHours(h)*(rateAt(e.rates,date)||0):0)},0),
     trk:d.trk.reduce((s,x)=>{const tr=byId(m.trucks,x.t);if(!tr)return s;return s+truckM3(x,tr)*truckRate(tr,date)},0),
@@ -936,7 +950,8 @@ function renderDayInner(main){
     <div class="r2">${stPill}${isFri?'<span class="pill warn">جمعة</span>':""}${dow(date)===4?'<span class="pill">الخميس حتى 12 ظهرًا</span>':""}</div>
     <div class="wk">${week}</div>
     <div class="dtools">${date!==T?`<button class="btn sm" data-dnav="today">اليوم</button>`:""}</div></div>
-  <div class="dsum"><div><small>أعمال اليوم</small><b id="dsW">—</b></div><div><small>منصرف الخزنة</small><b id="dsO">—</b></div><div><small>وارد</small><b id="dsI">—</b></div></div>
+  <div class="dsum2"><div class="dh"><small>إجمالي تكلفة اليوم</small><b id="dsW">—</b><u>ج.م</u></div><div class="dbk" id="dsP"></div>
+    <div class="drow"><div><small>المدفوع اليوم</small><b id="dsO">—</b></div><div><small>الباقي</small><b id="dsR">—</b></div><div><small>وارد للخزنة</small><b id="dsI">—</b></div></div></div>
   ${subPanel(date)}${banner}<form id="dayForm">
   <div class="gh"><span>التشغيل</span></div><div class="grp">
   ${sec("h","exc","op","معدات بالساعة",hourlyAct.length?`${hourlyAct.length} معدات · ${fmt(hrsTot,2)} ساعة${hOff?` · ${hOff} لا تعمل`:""}`:"لا توجد معدات",hourlyHtml,"hourly",hWarn?"y":d.hourly.length?"g":"")}
@@ -964,7 +979,7 @@ function renderDayInner(main){
   if(st==="closed"&&isOwner()&&!day.approved)acts.push(`<button class="btn ghost" data-day="reopen">فتح</button><button class="btn gold" data-day="approve">اعتماد</button>`);
   else if(st==="closed"&&isOwner())acts.push(`<button class="btn gold" data-day="reopen">فتح للتعديل</button>`);
   const stTxt=st==="closed"?(day.approved?"مقفولة · معتمدة":"مقفولة · بانتظار الاعتماد"):st==="open"?"يومية مفتوحة":"يومية جديدة";
-  foot.innerHTML=`<div class="foot-in"><span class="flock">${IC(edit?"unlock":"lock",18)}</span><div class="fstat"><b>${stTxt}</b><span class="dot" id="saveDot"></span> <span id="saveTxt">${edit?"جاهز":"للعرض فقط"}</span></div><div class="fact"><button class="fib" data-day="pdf" title="تقرير PDF" aria-label="تقرير PDF">${IC("pdf",18)}</button><button class="fib" data-day="wa" title="ملخص واتساب" aria-label="ملخص واتساب">${IC("wa",18)}</button>${acts.join("")}</div></div>`;
+  foot.innerHTML=`<div class="foot-in"><span class="flock">${IC(edit?"unlock":"lock",18)}</span><div class="fstat"><b>التكلفة <span class="num" id="ftCost">—</span></b><span class="dot" id="saveDot"></span> <span id="saveTxt">${edit?stTxt+" · جاهز":stTxt}</span></div><div class="fact"><button class="fib" data-day="pdf" title="تقرير PDF" aria-label="تقرير PDF">${IC("pdf",18)}</button><button class="fib" data-day="wa" title="ملخص واتساب" aria-label="ملخص واتساب">${IC("wa",18)}</button>${acts.join("")}</div></div>`;
   updateDayTotals();
   main.querySelectorAll("#dayForm input").forEach(i=>{i.enterKeyHint="next"});
 }
