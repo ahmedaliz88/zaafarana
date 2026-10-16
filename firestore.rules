@@ -66,6 +66,8 @@ service cloud.firestore {
         && request.resource.data.by == request.auth.uid
         && id == request.resource.data.date + '_' + request.auth.uid
         && (resource == null || resource.data.by == request.auth.uid)
+        // after a supervisor hands in (sub = true) only the owner can reopen it
+        && (resource == null || resource.data.get('sub', false) == false)
         && !dayClosed(request.resource.data.date);
     }
     match /sealed/{d} {
