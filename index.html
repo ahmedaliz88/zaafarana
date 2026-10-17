@@ -567,7 +567,7 @@ body.field main{padding-bottom:150px}
 const CATS=["إعاشة وتغذية","سكن وإقامة","انتقالات ووقود سيارات","تجهيزات وأصول الموقع","صيانة وخدمات المعسكر","معمل واختبارات","إكراميات ومصاريف علاقات","نقل معدات","مياه الموقع","مصروفات مشروع آخر","متنوعة"];
 const METHODS=["نقدى","انستا باى","فودافون كاش","تحويل بنكى","شيك"];
 const PERMS={hourly:"معدات بالساعة",monthly:"معدات شهرية (عطل / إضافي)",trucks:"سيارات النقل",items:"بنود بالعدد (مياه / توريدات)",workers:"حضور العمالة",diesel:"السولار"};
-const SUPTYPE={equip:"مورد معدات",truck:"مورد سيارات نقل",contractor:"مقاول بالكمية",other:"مورد آخر"};
+const SUPTYPE={equip:"مورد معدات",truck:"مورد سيارات نقل",water:"مقاول مياه",contractor:"مقاول بالكمية",other:"مورد آخر"};
 const DAYN=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const ARR=["hourly","mex","wex","trk","itm","dsl","exp","pay","adv","geo","inc","adj","evl","wtc","wat","stin","stout","stc"];
 const RTL={ex:"ممتاز",gd:"جيد",pr:"ضعيف"},RTC={ex:"ok",gd:"info",pr:"bad"},RTS={ex:3,gd:2,pr:1};
@@ -749,7 +749,10 @@ function compute(asOf){
     day.adj.forEach(x=>{const a=n0(x.a);if(!a)return;const pr=x.per?{per:x.per}:null;if(x.k==="deduct")W(x.acc,d,"خصم: "+(x.n||""),-a,"adj",pr);else W(x.acc,d,x.n||"قيد أعمال",a,"adj",pr);if(acc[x.acc])C(acc[x.acc].kind==="wrk"?"المرتبات":"أعمال أخرى (قيود)",x.k==="deduct"?-a:a)});
     day.pay.forEach(x=>{const a=n0(x.a);if(!a)return;const ac=acc[x.acc];P(x.acc,d,"دفعة"+(x.m?" – "+x.m:"")+(x.n?" – "+x.n:""),a,"pay",x.per,x.pid);T(d,"دفعة: "+(ac?ac.name:"؟")+(x.n?" – "+x.n:""),0,a,ac&&ac.kind==="wrk"?"مرتبات":"دفعات موردين")});
     day.adv.forEach(x=>{const a=n0(x.a);if(!a)return;let key;if(x.w){key="wrk:"+x.w}else{key="oth:"+(x.nm||"سلف أخرى");A(key,"oth",x.nm||"سلف أخرى",{})}P(key,d,(x.n&&x.n.startsWith("سلفة")?x.n:"سلفة"+(x.n?" – "+x.n:"")),a,"adv",x.per,x.pid);T(d,"سلفة: "+(acc[key]?acc[key].name:""),0,a,"سلف")});
-    (day.wat||[]).forEach(x=>{const a=watAmt(x);if(!a)return;T(d,"مياه: "+(x.s||"نقلات مياه")+(n0(x.n)?` (${fmt(x.n)} نقلة)`:""),0,a,"المياه");C("المياه",a);D(d).works+=a});
+    (day.wat||[]).forEach(x=>{const a=watAmt(x,d);
+      if(x.sup&&acc["sup:"+x.sup]){const pr=watPrice(x,d);if(a){W("sup:"+x.sup,d,`نقلات مياه: ${fmt(x.n)} نقلة × ${fmt(pr,2)}${x.nt?" – "+x.nt:""}`,a,"wa",{q:n0(x.n),u:"نقلة",r:pr,nl:n0(x.n)});C("المياه",a);D(d).works+=a;if(n0(x.n)&&!pr)issues.push({lvl:"warn",t:"نقلات مياه بدون سعر – حدد سعر النقلة للمقاول"})}
+        const pd=n0(x.pd);if(pd){const ac=acc["sup:"+x.sup];P("sup:"+x.sup,d,"دفعة مع نقلات المياه"+(x.m?" – "+x.m:""),pd,"pay",null,x.pid);T(d,"دفعة مياه: "+(ac?ac.name:""),0,pd,"المياه")}return}
+      if(!a)return;T(d,"مياه: "+(x.s||"نقلات مياه")+(n0(x.n)?` (${fmt(x.n)} نقلة)`:""),0,a,"المياه");C("المياه",a);D(d).works+=a});
     day.exp.forEach(x=>{const a=n0(x.a);if(!a)return;T(d,(x.d||"مصروف")+(x.c?" ("+x.c+")":""),0,a,x.c||"متنوعة");C(x.c||"متنوعة",a);D(d).works+=a});
     day.dsl.forEach(x=>{const a=dieselAmount(x,d);if(!a)return;const e=byId(m.monthly,x.e)||byId(m.hourly,x.e);T(d,"سولار: "+(e?e.name:(x.n||"أخرى"))+(n0(x.l)?` (${fmt(x.l)} لتر)`:""),0,a,"سولار");C("سولار",a);D(d).works+=a;
       if(n0(x.l)&&num(x.a)===null&&!rateAt(m.dieselPrices,d))issues.push({lvl:"warn",t:"لترات سولار مسجلة بدون سعر لتر – أدخل السعر من الإعدادات"})});
@@ -823,7 +826,7 @@ function rowParts(k,r,date){const m=M();const nm=(l,id)=>(byId(l,id)||{}).name||
   case"geo":return[nm(m.suppliers,r.c),(r.d||"")+" "+fmt(r.q,2)];
   case"inc":return[r.src==="partner"?nm(m.partners,r.p):r.src==="mst"?"مستخلص "+(r.no||""):"إيراد آخر",am(r.a)];
   case"adj":return[accName(r.acc),(r.k==="deduct"?"خصم − ":"أعمال + ")+am(r.a)+(r.n?" · "+r.n:"")];
-  case"wat":return[r.s||"مياه",(n0(r.n)?fmt(r.n)+" نقلة · ":"")+money(watAmt(r))+" ج"];
+  case"wat":return[r.sup?((byId(M().suppliers,r.sup)||{}).name||"مقاول مياه"):r.s||"مياه",(n0(r.n)?fmt(r.n)+" نقلة · ":"")+money(watAmt(r,date))+" ج"];
   case"stin":return[stItem(r.it).name+(r.ret?" – ارتجاع":""),(r.ret?stWhoName(r)+" · ":"")+fmt(r.q,2)+" "+(stItem(r.it).unit||"")+(r.ret?"":" · "+money(stInAmt(r))+" ج")+(r.s?" · "+r.s:"")];
   case"stout":return[stItem(r.it).name,(r.k==="cus"?"عهدة → ":"صرف → ")+stWhoName(r)+" · "+fmt(r.q,2)+" "+(stItem(r.it).unit||"")];
   case"stc":return[stItem(r.it).name,"جرد: "+fmt(r.q,2)+" "+(stItem(r.it).unit||"")];
@@ -1020,7 +1023,7 @@ function dayTotals(date){const d=mergedDay(date,true);const m=M();let works=0,ou
   const isFri=dow(date)===5;
   m.monthly.filter(e=>isActive(e,date)).forEach(e=>{const r=(rateAt(e.rates,date)||0)/26;const x=d.mex.find(z=>z.id===e.id);let v=isFri?0:r;if(x){if(x.k==="off"&&!isFri)v=0;else if(x.k==="half"&&!isFri)v=r/2;else if(x.k==="fri"&&isFri)v=r;v+=n0(x.ot)*(rateAt(e.ot,date)||0)}works+=v});snap("m");
   m.workers.filter(w=>isActive(w,date)).forEach(w=>{const r=(rateAt(w.rates,date)||0)/26;const x=d.wex.find(z=>z.id===w.id);let v=isFri?0:r;if(x){if(x.k==="off"&&!isFri)v=0;else if(x.k==="half"&&!isFri)v=r/2;else if(x.k==="fri"&&isFri)v=r;v+=n0(x.ot)*r/7-n0(x.dh)*r/7}works+=v});snap("w");
-  d.exp.forEach(x=>{out+=n0(x.a);works+=n0(x.a)});snap("e");d.dsl.forEach(x=>{const a=dieselAmount(x,date);out+=a;works+=a});{const sc=stDay(date);works+=sc.useD;snap("d");works+=sc.use-sc.useD+sc.loss;snap("st");out+=sc.buy}(d.wat||[]).forEach(x=>{const a=watAmt(x);out+=a;works+=a});snap("wa");d.pay.forEach(x=>out+=n0(x.a));d.adv.forEach(x=>out+=n0(x.a));d.inc.forEach(x=>inn+=n0(x.a));
+  d.exp.forEach(x=>{out+=n0(x.a);works+=n0(x.a)});snap("e");d.dsl.forEach(x=>{const a=dieselAmount(x,date);out+=a;works+=a});{const sc=stDay(date);works+=sc.useD;snap("d");works+=sc.use-sc.useD+sc.loss;snap("st");out+=sc.buy}(d.wat||[]).forEach(x=>{const a=watAmt(x,date);out+=watCash(x,date);works+=a});snap("wa");d.pay.forEach(x=>out+=n0(x.a));d.adv.forEach(x=>out+=n0(x.a));d.inc.forEach(x=>inn+=n0(x.a));
   return{works,out,inn,d,P};
 }
 function updateDayTotals(){if(S.tab!=="day"||!S.cur)return;const t=dayTotals(S.cur.date);const w=$("#dsW"),o=$("#dsO"),i=$("#dsI");if(w){w.textContent=money(t.works);o.textContent=money(t.out);i.textContent=money(t.inn);const rr=$("#dsR");if(rr){const v=t.works-t.out;rr.textContent=money(v);rr.style.color=v>0.5?"var(--bad)":v<-0.5?"var(--ok)":""}
@@ -1031,7 +1034,7 @@ function updateDayTotals(){if(S.tab!=="day"||!S.cur)return;const t=dayTotals(S.c
   const st={hourly:d.hourly.reduce((s,h)=>{const e=byId(m.hourly,h.e);return s+(e?hourlyHours(h)*(rateAt(e.rates,date)||0):0)},0),
     trk:d.trk.reduce((s,x)=>{const tr=byId(m.trucks,x.t);if(!tr)return s;return s+truckM3(x,tr)*truckRate(tr,date,rowWt("t",x,date))},0),
     itm:d.itm.reduce((s,x)=>{const it=byId(m.items,x.i);return s+(it?n0(x.n)*itemRate(it,date):0)},0),
-    dsl:d.dsl.reduce((s,x)=>s+dieselAmount(x,date),0),stin:(d.stin||[]).reduce((s,x)=>s+(x.ret?0:stInAmt(x)),0),wat:(d.wat||[]).reduce((s,x)=>s+watAmt(x),0),exp:d.exp.reduce((s,x)=>s+n0(x.a),0),pay:d.pay.reduce((s,x)=>s+n0(x.a),0),adv:d.adv.reduce((s,x)=>s+n0(x.a),0),inc:d.inc.reduce((s,x)=>s+n0(x.a),0)};
+    dsl:d.dsl.reduce((s,x)=>s+dieselAmount(x,date),0),stin:(d.stin||[]).reduce((s,x)=>s+(x.ret?0:stInAmt(x)),0),wat:(d.wat||[]).reduce((s,x)=>s+watAmt(x,date),0),exp:d.exp.reduce((s,x)=>s+n0(x.a),0),pay:d.pay.reduce((s,x)=>s+n0(x.a),0),adv:d.adv.reduce((s,x)=>s+n0(x.a),0),inc:d.inc.reduce((s,x)=>s+n0(x.a),0)};
   Object.entries(st).forEach(([k,v])=>{const e=document.querySelector(`[data-tot="${k}"]`);if(e)e.textContent=v?money(v):""});
 }
 function srcAttrs(r){return`data-src="${r._src}" data-i="${r._i}"`}
@@ -1140,7 +1143,7 @@ function renderDayInner(main){
   const advHtml=listSec("adv",r=>SEL(r,"adv","w","العامل",m.workers.map(w=>[w.id,w.name]),"شخص آخر")+(r.w?"":I(r,"adv","nm","الاسم"))+I(r,"adv","a","المبلغ",'inputmode="decimal"')+SEL(r,"adv","m","طريقة السداد",METHODS,false)+I(r,"adv","n","ملاحظة"));
   const geoHtml=listSec("geo",r=>SEL(r,"geo","c","المقاول",m.suppliers.filter(s=>s.type==="contractor").map(s=>[s.id,s.name]))+I(r,"geo","d","البيان (طبقة / محطات)")+I(r,"geo","q","الكمية",'inputmode="decimal"')+I(r,"geo","sv","اعتماد المساح"));
   const incHtml=listSec("inc",r=>SEL(r,"inc","src","المصدر",[["partner","شريك"],["mst","مستخلص من الهيئة"],["other","إيراد آخر"]],false)+(r.src==="mst"?I(r,"inc","no","رقم المستخلص")+I(r,"inc","per","الفترة")+I(r,"inc","g","القيمة الإجمالية",'inputmode="decimal"')+I(r,"inc","ded","الاستقطاعات",'inputmode="decimal"'):r.src==="other"?"":SEL(r,"inc","p","الشريك",m.partners.map(p=>[p.id,p.name])))+I(r,"inc","a",r.src==="mst"?"الصافى المحصّل":"المبلغ",'inputmode="decimal"')+SEL(r,"inc","m","الطريقة",METHODS,false)+I(r,"inc","ch","رقم الشيك")+I(r,"inc","n","ملاحظة"));
-  const watHtml=listSec("wat",r=>I(r,"wat","s","المورد / المصدر")+I(r,"wat","n","عدد النقلات",'inputmode="decimal"')+I(r,"wat","p","سعر النقلة",'inputmode="decimal"')+I(r,"wat","a","أو المبلغ مباشرة",'inputmode="decimal"')+SEL(r,"wat","m","طريقة السداد",METHODS,false)+I(r,"wat","nt","ملاحظة")+`<div class="small muted" style="align-self:end">= <b class="num" data-watv>${money(watAmt(r))}</b> ج</div>`);
+  const WS=watSups();const watHtml=(WS.length?"":`<div class="small muted" style="margin-bottom:6px">لعمل حساب لمقاول مياه (نقلات بالآجل ودفعات ومستخلصات): أضفه من الإعدادات كمورد نوعه «مقاول مياه» بسعر النقلة.</div>`)+listSec("wat",r=>(WS.length?SEL(r,"wat","sup","مقاول المياه",WS.map(s=>[s.id,s.name]),"— شراء نقدى بدون حساب —"):"")+(r.sup?"":I(r,"wat","s","المورد / المصدر"))+I(r,"wat","n","عدد النقلات",'inputmode="decimal"')+`<label class="f">سعر النقلة<input ${srcAttrs(r)} data-arr="wat" data-k="p" inputmode="decimal" value="${esc(r.p??"")}" placeholder="${r.sup?esc(String(watPrice({sup:r.sup},date)||"")):""}"${canRow(r)?"":" disabled"}></label>`+(r.sup?I(r,"wat","pd","مدفوع الآن (اختيارى)",'inputmode="decimal"'):I(r,"wat","a","أو المبلغ مباشرة",'inputmode="decimal"'))+SEL(r,"wat","m","طريقة السداد",METHODS,false)+I(r,"wat","nt","ملاحظة")+`<div class="small muted" style="align-self:end">= <b class="num" data-watv>${money(watAmt(r,date))}</b> ج${r.sup?` · <span class="pill info">على حساب المقاول</span>`:""}</div>`);
   const adjHtml=listSec("adj",r=>SEL(r,"adj","acc","الحساب",accOpts)+SEL(r,"adj","k","النوع",[["work","أعمال / مستحق (+)"],["deduct","خصم على المورد (−)"]],false)+I(r,"adj","a","المبلغ",'inputmode="decimal"')+I(r,"adj","n","البيان"));
   if(!S.secOpen)S.secOpen=lsGet("zf_secopen")||{h:1,t:1};
   const sec=(id,ic,cls,title,sub,body,tot,dot)=>`<details class="sec" data-sec="${id}" ${S.secOpen[id]?"open":""}><summary><span class="sic ${cls}">${IC(ic,18)}</span><span class="stx"><h3>${title}</h3><span class="ssub">${sub}</span></span><span class="tot" data-tot="${tot||""}"></span><span class="sdot ${dot||""}"></span><span class="chev"></span></summary><div class="sb">${body}</div></details>`;
@@ -1224,7 +1227,7 @@ function closeSummary(date){const m=M(),d=mergedDay(date,true),y=mergedDay(addDa
 $("#main").addEventListener("input",e=>{
   if(S.tab!=="day"||!S.cur)return;const t=e.target;
   if(t.id==="dayDate"){if(t.value){openDay(t.value);render()}return}
-  if(t.dataset.qk){qkRead();qkHint();return}
+  if(t.dataset.qk){qkRead();qkHint();if(t.id==="qkS"){render()}return}
   if(t.dataset.notes){S.cur.notes=t.value;markDirty();return}
   if(t.dataset.exf){setEx(t.dataset.exf,t.dataset.id,{[t.dataset.k]:t.value});return}
   if(t.dataset.evln){if(!canEditDay(S.cur.date))return;const[k,id]=t.dataset.evln.split("|");S.cur.evl=S.cur.evl||[];evlSet(S.cur.evl,k,id,{n:t.value});markDirty();return}
@@ -1241,13 +1244,13 @@ $("#main").addEventListener("input",e=>{
   if(arr==="itm"){const it=byId(M().items,target.i);const el=document.querySelector(`[data-itm="${target.i}"]`);if(it&&el){const n=n0(target.n);el.textContent=n?money(n*itemRate(it,S.cur.date))+" ج":""}}
   if(arr==="stin"||arr==="stout"||arr==="stc")SL=null;
   if(arr==="dsl"){const it=t.closest(".item");const v=it&&it.querySelector("[data-dslv]");if(v)v.textContent=money(dieselAmount(target,S.cur.date))}
-  if(arr==="wat"){const it=t.closest(".item");const v=it&&it.querySelector("[data-watv]");if(v)v.textContent=money(watAmt(target))}
+  if(arr==="wat"){const it=t.closest(".item");const v=it&&it.querySelector("[data-watv]");if(v)v.textContent=money(watAmt(target,S.cur.date))}
   if(src==="day")markDirty();else{saveEntryDoc(src.slice(4));updateDayTotals()}
 });
 $("#main").addEventListener("click",e=>{if(e.target.id==="dayDate"&&e.target.showPicker){try{e.target.showPicker()}catch(x){}}});
 $("#main").addEventListener("click",e=>{const b=e.target.closest("[data-jump]");if(!b||S.tab!=="day")return;const d=document.querySelector(`details.sec[data-sec="${b.dataset.jump}"]`);if(!d)return;if(!d.open)d.open=true;const y=d.getBoundingClientRect().top+window.scrollY-(document.querySelector(".jump")?.offsetHeight||0)-70;window.scrollTo({top:y,behavior:"smooth"})});
 $("#main").addEventListener("toggle",e=>{const d=e.target;if(!d.dataset||!d.dataset.sec)return;S.secOpen=S.secOpen||{};S.secOpen[d.dataset.sec]=d.open?1:0;lsSet("zf_secopen",S.secOpen)},true);
-$("#main").addEventListener("change",e=>{if(S.tab!=="day")return;const t=e.target;if((t.tagName==="SELECT"&&t.dataset.arr&&["src","w","acc"].includes(t.dataset.k))||(t.dataset.arr==="pay"&&t.dataset.k==="a")||(t.dataset.arr==="exp"&&t.dataset.k==="a")){saveDay();setTimeout(render,0)}});
+$("#main").addEventListener("change",e=>{if(S.tab!=="day")return;const t=e.target;if((t.tagName==="SELECT"&&t.dataset.arr&&["src","w","acc","sup","it"].includes(t.dataset.k))||(t.dataset.arr==="pay"&&t.dataset.k==="a")||(t.dataset.arr==="exp"&&t.dataset.k==="a")){saveDay();setTimeout(render,0)}});
 $("#main").addEventListener("keydown",e=>{if(S.tab!=="day"||e.key!=="Enter")return;const t=e.target;if(t.tagName!=="INPUT"||!t.closest("#dayForm"))return;
   if(t.dataset.qk){e.preventDefault();qkRead();const amt=num(S.qk.a)!==null||(["wat","dsl"].includes(S.qk.t)&&num(S.qk.q)!==null);if(amt&&(t.id==="qkA"||t.id==="qkN"||t.id==="qkQ"||t.id==="qkP"))qkAdd();else{const L=[...document.querySelectorAll("#dayForm [data-qk]")];const i=L.indexOf(t);if(L[i+1])L[i+1].focus()}return}e.preventDefault();const all=[...document.querySelectorAll("#dayForm input:not([disabled]),#dayForm select:not([disabled])")].filter(x=>x.offsetParent!==null);const i=all.indexOf(t);if(i>=0&&all[i+1])all[i+1].focus();else t.blur()});
 function setEx(key,id,patch){
@@ -1434,7 +1437,7 @@ function qkFavs(t,date){const m=M();const ds=Object.keys(S.days).filter(d=>d<=da
     if(t==="dsl")(x.stin||[]).forEach(r=>{if(r.it==="diesel"&&r.s)add(r.s,r.s)});
     if(t==="inc")(x.inc||[]).forEach(r=>{if(r.src==="partner")add(r.p,(byId(m.partners,r.p)||{}).name)})});
   return Object.entries(cnt).sort((a,b)=>b[1].n-a[1].n||a[1].o-b[1].o).slice(0,8)}
-function qkRead(){const q=S.qk;["W","A","M","N","C","D","Q","P"].forEach(k=>{const el=document.getElementById("qk"+k);if(el)q[k.toLowerCase()]=el.value})}
+function qkRead(){const q=S.qk;["W","A","M","N","C","D","Q","P","S"].forEach(k=>{const el=document.getElementById("qk"+k);if(el)q[k.toLowerCase()]=el.value})}
 function qkHintTxt(){const q=S.qk;const CP=S.qkCP;if(q.t==="pay"&&q.w&&CP&&CP.acc[q.w]){const b=CP.acc[q.w].bal;return b>=0?`مستحق له الآن: <b class="num">${money(b)}</b> ج`+(num(q.a)>b+0.5?' <span class="wtag">⚠ المبلغ أكبر من المستحق</span>':""):`مدفوع له زيادة: <b class="num">${money(-b)}</b> ج`}
   if(q.t==="wat"){const v=num(q.a)??(n0(q.q)*n0(q.p));return v?`قيمة المياه: <b class="num">${money(v)}</b> ج`:""}
   if(q.t==="dsl"){const v=num(q.a)??(n0(q.q)*n0(q.p));const g=stLedger().items.diesel;return(v?`قيمة الشراء: <b class="num">${money(v)}</b> ج · `:"")+`رصيد الخزان: <b class="num">${fmt(g?g.bal:0,0)}</b> لتر`}
@@ -1447,18 +1450,18 @@ function qkCard(date,CP,edit){const m=M();const q=S.qk;const t=q.t;S.qkCP=CP;
   if(t==="pay")who=O("qkW","لمين",[...m.suppliers.map(s=>["sup:"+s.id,s.name]),...m.workers.map(w=>["wrk:"+w.id,w.name+" (عامل)"])],q.w,"— اختر الحساب —");
   else if(t==="adv")who=O("qkW","العامل",m.workers.filter(w=>isActive(w,date)||w.id===q.w).map(w=>[w.id,w.name]),q.w,"— اختر العامل —");
   else if(t==="exp")who=O("qkC","التصنيف",m.cats,q.c||"","— التصنيف —")+N("qkD","البيان",q.d,"مثال: عشاء العمال");
-  else if(t==="wat")who=N("qkW","المورد",q.w,"مورد المياه")+N("qkQ","النقلات",q.q,"0",1,"sm")+N("qkP","سعر النقلة",q.p,"0",1,"sm");
+  else if(t==="wat")who=(watSups().length?O("qkS","مقاول المياه",watSups().map(s=>[s.id,s.name]),q.s||"","— نقدى بدون حساب —"):"")+(q.s?"":N("qkW","المورد",q.w,"مورد المياه"))+N("qkQ","النقلات",q.q,"0",1,"sm")+N("qkP","سعر النقلة",q.p||(q.s?String(watPrice({sup:q.s},date)||""):""),"0",1,"sm");
   else if(t==="dsl")who=N("qkW","المحطة / المورد",q.w,"اسم المحطة")+N("qkQ","لترات",q.q,"0",1,"sm")+N("qkP","سعر اللتر",q.p,"0",1,"sm");
   else if(t==="inc")who=O("qkW","من الشريك",m.partners.map(p=>[p.id,p.name]),q.w,"— الشريك —");
   const favs=edit?qkFavs(t,date):[];
-  const rows=[];[["pay","دفعة"],["adv","سلفة"],["exp","مصروف"],["wat","مياه"],["stin","شراء مخزن"],["dsl","سولار"],["inc","وارد"]].forEach(([k,l])=>(S.cur[k]||[]).forEach((r,i)=>{if(k==="stin"&&r.ret)return;const a=k==="dsl"?dieselAmount(r,date):k==="wat"?watAmt(r):k==="stin"?stInAmt(r):n0(r.a);if(!a)return;const[pt,dt]=rowParts(k,r,date);rows.push({k,i,l,pt,dt:k==="pay"||k==="adv"||k==="exp"||k==="inc"?(k==="exp"&&r.c&&r.d?r.c:r.n||""):dt.replace(/ · [\d,.]+ ج$/,"").replace(/^[\d,.]+ ج$/,""),a,m:r.m||"",inn:k==="inc"})}));
+  const rows=[];[["pay","دفعة"],["adv","سلفة"],["exp","مصروف"],["wat","مياه"],["stin","شراء مخزن"],["dsl","سولار"],["inc","وارد"]].forEach(([k,l])=>(S.cur[k]||[]).forEach((r,i)=>{if(k==="stin"&&r.ret)return;const a=k==="dsl"?dieselAmount(r,date):k==="wat"?watCash(r,date):k==="stin"?stInAmt(r):n0(r.a);if(!a)return;const[pt,dt]=rowParts(k,r,date);rows.push({k,i,l,pt,dt:k==="pay"||k==="adv"||k==="exp"||k==="inc"?(k==="exp"&&r.c&&r.d?r.c:r.n||""):dt.replace(/ · [\d,.]+ ج$/,"").replace(/^[\d,.]+ ج$/,""),a,m:r.m||"",inn:k==="inc"})}));
   let op=0;Object.entries(CP.daily||{}).forEach(([d,v])=>{if(d<date)op+=v.cashIn-v.cashOut});const T=dayTotals(date);
   const sum=rows.filter(r=>!r.inn).reduce((a,r)=>a+r.a,0);
   return`<div class="qk"><div class="qkh"><span class="sic cs">${IC("wallet",18)}</span><div class="grow"><b>حركة خزنة سريعة</b><small>${edit?"اختر النوع ← لمين ← المبلغ ← Enter":"حركات الخزنة فى هذا اليوم"}</small></div></div>
   <div class="qkbal"><div><small>رصيد أول اليوم</small><b class="num">${money(op)}</b></div><div><small>وارد اليوم</small><b class="num in">${money(T.inn)}</b></div><div><small>منصرف اليوم</small><b class="num out">${money(T.out)}</b></div><div class="hi"><small>رصيد آخر اليوم</small><b class="num">${money(op+T.inn-T.out)}</b></div></div>
   ${edit?`<div class="qkt" role="tablist">${QKT.map(([k,l,ic])=>`<button type="button" data-qkt="${k}" aria-pressed="${k===t}">${IC(ic,15)}<span>${l}</span></button>`).join("")}</div>
   ${favs.length?`<div class="qkfav"><span>متكرر:</span>${favs.map(([k,v])=>`<button type="button" data-qkf="${esc(k)}" aria-pressed="${(t==="exp"?(q.c||"")+"|"+(q.d||""):q.w)===k}">${esc(v.l)}</button>`).join("")}</div>`:""}
-  <div class="qkf">${who}${N("qkA",t==="wat"||t==="dsl"?"أو المبلغ":"المبلغ",q.a,"0",1,"amt")}${O("qkM","الطريقة",METHODS,q.m||"نقدى",false)}${t==="exp"?"":N("qkN","ملاحظة",q.n,"")}<button type="button" class="btn pri qkgo" data-qkadd="1">${IC("plus",16)} تسجيل</button></div>
+  <div class="qkf">${who}${N("qkA",t==="wat"&&q.s?"مدفوع الآن":t==="wat"||t==="dsl"?"أو المبلغ":"المبلغ",q.a,"0",1,"amt")}${O("qkM","الطريقة",METHODS,q.m||"نقدى",false)}${t==="exp"?"":N("qkN","ملاحظة",q.n,"")}<button type="button" class="btn pri qkgo" data-qkadd="1">${IC("plus",16)} تسجيل</button></div>
   <div class="small qkhint" id="qkHint">${qkHintTxt()}</div>`:""}
   ${rows.length?`<div class="qkl">${(S.qkAll||rows.length<=5?rows:rows.slice(-4)).map(r=>`<div class="qr"><span class="pill ${r.inn?"ok":r.k==="adv"?"warn":""}">${r.l}</span><div class="qn"><b>${esc(r.pt)}</b>${r.dt||r.m?`<small>${esc([r.dt,r.m].filter(Boolean).join(" · "))}</small>`:""}</div><span class="num qa ${r.inn?"in":"out"}" dir="ltr">${r.inn?"+":"−"}${money(r.a)}</span>${edit&&!(ownLock()&&false)?`<button type="button" class="x" data-qdel="${r.k}|${r.i}" aria-label="حذف">×</button>`:""}</div>`).join("")}${!S.qkAll&&rows.length>5?`<button type="button" class="link qkmore" data-qkall="1">عرض كل الحركات (${rows.length}) – الظاهر آخر 4</button>`:S.qkAll&&rows.length>5?`<button type="button" class="link qkmore" data-qkall="0">إخفاء الحركات القديمة</button>`:""}<div class="qr qt"><span></span><div class="qn"><b>إجمالى المنصرف (${(n=>n+" "+(n>=3&&n<=10?"حركات":"حركة"))(rows.filter(r=>!r.inn).length)})</b></div><span class="num qa out" dir="ltr">−${money(sum)}</span>${edit?"<span></span>":""}</div></div>`:`<p class="small muted" style="margin:8px 2px 0">لا توجد حركات خزنة فى هذا اليوم.</p>`}
   </div>`}
@@ -1467,12 +1470,13 @@ function qkAdd(){if(!S.cur||!canEditDay(S.cur.date))return;qkRead();const q=S.qk
   if(t==="pay"){if(!q.w)return qkErr("اختر الحساب");if(!a)return qkErr("اكتب المبلغ");row={acc:q.w,a,m,n:q.n||"",per:date.slice(0,7)};label=accName(q.w)}
   else if(t==="adv"){if(!q.w)return qkErr("اختر العامل");if(!a)return qkErr("اكتب المبلغ");row={w:q.w,a,m,n:q.n||""};label=(byId(M().workers,q.w)||{}).name}
   else if(t==="exp"){if(!q.c&&!(q.d||"").trim())return qkErr("اختر التصنيف أو اكتب البيان");if(!a)return qkErr("اكتب المبلغ");row={d:(q.d||"").trim()||q.c,c:q.c||"",a,m,rc:""};label=row.d}
+  else if(t==="wat"&&q.s){const n=num(q.q),pr=num(q.p);if(!n)return qkErr("اكتب عدد النقلات");row={sup:q.s,n,m,nt:q.n||""};if(pr!==null&&pr!==watPrice({sup:q.s},date))row.p=pr;if(a)row.pd=a;label=(byId(M().suppliers,q.s)||{}).name+" – "+fmt(n)+" نقلة"}
   else if(t==="wat"){const n=num(q.q),pr=num(q.p);if(!a&&!(n&&pr))return qkErr("اكتب النقلات والسعر أو المبلغ");row={s:(q.w||"").trim(),m,nt:q.n||""};if(n)row.n=n;if(pr)row.p=pr;if(a)row.a=a;label=row.s||"مياه"}
   else if(t==="dsl"){const l=num(q.q),pr=num(q.p);if(!l)return qkErr("اكتب عدد اللترات");if(!a&&!pr)return qkErr("اكتب سعر اللتر أو المبلغ");row={it:"diesel",q:l,m,s:(q.w||"").trim(),n:q.n||""};if(pr)row.p=pr;if(a)row.a=a;label="شراء سولار "+fmt(l)+" لتر"}
   else if(t==="inc"){if(!a)return qkErr("اكتب المبلغ");row={src:"partner",p:q.w||"",a,m,n:q.n||""};label="وارد"}
   if(!row)return;S.cur[t==="dsl"?"stin":t].push(row);markDirty();
-  const keep={t,m};if(t==="exp")keep.c=q.c;if(t==="wat"){keep.w=q.w;keep.p=q.p}S.qk=keep;
-  S.qkFocus=t==="exp"?"qkD":t==="wat"||t==="dsl"?"qkQ":"qkW";if(t==="dsl"){keep.w=q.w;keep.p=q.p}toast("تم تسجيل: "+(label||"")+" – "+money(t==="wat"?watAmt(row):t==="dsl"?stInAmt(row):a)+" ج");render()}
+  const keep={t,m};if(t==="exp")keep.c=q.c;if(t==="wat"){keep.w=q.w;keep.p=q.p;keep.s=q.s}S.qk=keep;
+  S.qkFocus=t==="exp"?"qkD":t==="wat"||t==="dsl"?"qkQ":"qkW";if(t==="dsl"){keep.w=q.w;keep.p=q.p}toast("تم تسجيل: "+(label||"")+" – "+money(t==="wat"?watAmt(row,date):t==="dsl"?stInAmt(row):a)+" ج");render()}
 $("#main").addEventListener("click",e=>{if(S.tab!=="day"||!S.cur)return;const b=e.target.closest("[data-qkt],[data-qkf],[data-qkadd],[data-qdel],[data-qkall]");if(!b)return;
   if(b.dataset.qkall){S.qkAll=b.dataset.qkall==="1";render();return}
   if(b.dataset.qkt){qkRead();const keepM=S.qk.m;S.qk={t:b.dataset.qkt,m:keepM};S.qkFocus="qkW";if(b.dataset.qkt==="exp")S.qkFocus="qkC";render();return}
@@ -1501,7 +1505,10 @@ function wtSeg(k,id,date,attr,edit){const v=wtAt(date,k,id,wtItem(k,id));
   return`<div class="seg wts" title="الشغل الحالى – يبقى كما هو حتى يتغير">${WTK.map(x=>`<button type="button" class="${x}" ${attr}="${k}|${id}|${x}" aria-pressed="${v===x}">${WT[x].replace("حفر ","")}</button>`).join("")}</div>`}
 
 /* ============================================================ WATER */
-const watAmt=x=>{const a=num(x.a);if(a!==null)return a;return n0(x.n)*n0(x.p)};
+const watPrice=(x,d)=>{const p=num(x.p);if(p!==null)return p;if(x.sup){const s=byId(M().suppliers,x.sup);return s?(rateAt(s.rates,d||todayStr())||0):0}return 0};
+const watAmt=(x,d)=>{const a=num(x.a);if(a!==null)return a;return n0(x.n)*watPrice(x,d)};
+const watCash=(x,d)=>x.sup?n0(x.pd):watAmt(x,d);
+const watSups=()=>M().suppliers.filter(s=>s.type==="water");
 
 /* ============================================================ PRODUCTION */
 const PITEM={rock:"حفر صخري",soil:"حفر عادي",fill:"ردم"};
@@ -1527,7 +1534,7 @@ function wtCosts(from,to){const m=M();const out={};const add=(d,w,v)=>{if(!v||d<
     day.itm.forEach(x=>{const it=byId(m.items,x.i);if(it)add(d,/مياه/.test(it.name||"")?"fill":"gen",n0(x.n)*itemRate(it,d))});
     day.geo.forEach(g=>{const s=byId(m.suppliers,g.c);if(s)add(d,s.wt||defWt("g",s),n0(g.q)*(num(g.r)??(rateAt(s.rates,d)||0)))});
     day.dsl.forEach(x=>{const a=dieselAmount(x,d);const eh=byId(m.hourly,x.e),em=byId(m.monthly,x.e);add(d,eh?wtAt(d,"h",eh.id,eh):em?wtAt(d,"m",em.id,em):"gen",a)});
-    (day.wat||[]).forEach(x=>add(d,"fill",watAmt(x)));
+    (day.wat||[]).forEach(x=>add(d,"fill",watAmt(x,d)));
     (day.stout||[]).forEach((x,i)=>{const c=stCost(d,"stout",i);if(!c)return;const eh=byId(m.hourly,x.e),em=byId(m.monthly,x.e);add(d,eh?wtAt(d,"h",eh.id,eh):em?wtAt(d,"m",em.id,em):"gen",c)});
     (day.stc||[]).forEach((x,i)=>add(d,"ind",stCost(d,"stc",i)));
     day.exp.forEach(x=>add(d,x.c==="مياه الموقع"?"fill":"ind",n0(x.a)));});
@@ -1540,7 +1547,7 @@ function watStats(from,to){const m=M();const r={buy:0,loads:0,exp:0,itm:0,rent:0
   MC={};try{const dates=new Set(Object.keys(S.days));Object.values(S.entries).forEach(e=>e&&e.date&&dates.add(e.date));
   const wEq=new Set([...m.monthly,...m.hourly].filter(e=>WATRX.test((e.type||"")+" "+(e.name||""))).map(e=>e.id));
   [...dates].filter(d=>d>=from&&d<=to).forEach(d=>{const day=md(d);
-    (day.wat||[]).forEach(x=>{const a=watAmt(x);r.buy+=a;r.loads+=n0(x.n);const k=x.s||"بدون اسم";const o=r.src[k]||(r.src[k]={n:0,a:0});o.n+=n0(x.n);o.a+=a});
+    (day.wat||[]).forEach(x=>{const a=watAmt(x,d);r.buy+=a;r.loads+=n0(x.n);const k=x.sup?((byId(M().suppliers,x.sup)||{}).name||"مقاول"):x.s||"بدون اسم";const o=r.src[k]||(r.src[k]={n:0,a:0});o.n+=n0(x.n);o.a+=a});
     day.exp.forEach(x=>{if(x.c==="مياه الموقع"||WATRX.test(x.d||""))r.exp+=n0(x.a)});
     day.itm.forEach(x=>{const it=byId(m.items,x.i);if(it&&WATRX.test(it.name||""))r.itm+=n0(x.n)*itemRate(it,d)});
     day.hourly.forEach(h=>{if(wEq.has(h.e)&&!h.off){const e=byId(m.hourly,h.e);const v=hourlyHours(h)*(rateAt(e.rates,d)||0);r.rent+=v;r.eq[e.name]=(r.eq[e.name]||0)+v}});
@@ -1803,19 +1810,20 @@ function extAgg(ls){const g={nl:0,m3:0,dmm:0,hrs:0,dh:0,mdays:0,wdays:0,items:{}
     else if(e==="w"){g.wdays+=n0(l.q);g.w.w+=l.work}
     else if(e.startsWith("i:")){const u=l.u||"";g.items[u]=(g.items[u]||0)+n0(l.q);g.w.i+=l.work}
     else if(e==="g"){const u=l.u||"م³";g.geo[u]=(g.geo[u]||0)+n0(l.q);g.w.g+=l.work}
+    else if(e==="wa"){g.wl=(g.wl||0)+n0(l.q);g.w.wa=(g.w.wa||0)+l.work}
     else g.w.o+=l.work});
   g.W=Object.values(g.w).reduce((a,b)=>a+b,0);return g}
 function extSummary(a,sd){const A=extAgg(sd.ext.prev),B=extAgg(sd.ext.cur);const F=(v,d)=>Math.abs(v)>0.004?fmt(v,d??2):"–";const MO=v=>Math.abs(v)>0.004?(v<0?"("+money(-v)+")":money(v)):"–";const isW=a.kind==="wrk";
   const rows=[];const q=(l,u,x,y,d)=>{if(Math.abs(x)>0.004||Math.abs(y)>0.004)rows.push([l,u,F(x,d),F(y,d),F(x+y,d)])};
   rows.push({g:"الكميات المنفذة"});
-  q("عدد النقلات","نقلة",A.nl,B.nl,0);q("الكمية المنقولة (صافي)","م³",A.m3,B.m3);q("خصم الأمتار","م³",A.dmm,B.dmm);
+  q("عدد النقلات","نقلة",A.nl,B.nl,0);q("نقلات المياه","نقلة",A.wl||0,B.wl||0,0);q("الكمية المنقولة (صافي)","م³",A.m3,B.m3);q("خصم الأمتار","م³",A.dmm,B.dmm);
   q("ساعات التشغيل (صافي)","ساعة",A.hrs,B.hrs);q("ساعات الخصم","ساعة",A.dh,B.dh);q("أيام الإيجار الشهري","يوم",A.mdays,B.mdays,1);q(isW?"أيام العمل المستحقة":"أيام العمل","يوم",A.wdays,B.wdays,1);
   [...new Set([...Object.keys(A.items),...Object.keys(B.items)])].forEach(u=>q("بنود بالعدد",u,A.items[u]||0,B.items[u]||0));
   [...new Set([...Object.keys(A.geo),...Object.keys(B.geo)])].forEach(u=>q("أعمال بالكمية",u,A.geo[u]||0,B.geo[u]||0));
   if(rows.length===1)rows.pop();
   rows.push({g:"القيم المالية"});
   const v=(l,x,y)=>{if(Math.abs(x)>0.004||Math.abs(y)>0.004)rows.push([l,"ج.م",MO(x),MO(y),MO(x+y)])};
-  v("قيمة أعمال النقل",A.w.t,B.w.t);v("قيمة تشغيل المعدات",A.w.h,B.w.h);v("قيمة الإيجار الشهري",A.w.m,B.w.m);v(isW?"الراتب المستحق (شامل الإضافي والخصم)":"أجور العمالة",A.w.w,B.w.w);v("بنود بالعدد",A.w.i,B.w.i);v("أعمال بالكمية",A.w.g,B.w.g);v("قيود وتسويات",A.w.o,B.w.o);
+  v("قيمة أعمال النقل",A.w.t,B.w.t);v("قيمة نقلات المياه",A.w.wa||0,B.w.wa||0);v("قيمة تشغيل المعدات",A.w.h,B.w.h);v("قيمة الإيجار الشهري",A.w.m,B.w.m);v(isW?"الراتب المستحق (شامل الإضافي والخصم)":"أجور العمالة",A.w.w,B.w.w);v("بنود بالعدد",A.w.i,B.w.i);v("أعمال بالكمية",A.w.g,B.w.g);v("قيود وتسويات",A.w.o,B.w.o);
   rows.push({s:["إجمالي قيمة الأعمال","ج.م",MO(A.W),MO(B.W),MO(A.W+B.W)]});
   if(isW){v("السلف",-A.adv,-B.adv);v("مدفوعات أخرى",-(A.paid-A.adv),-(B.paid-B.adv))}else v("المسدد",-A.paid,-B.paid);
   const nA=A.W-A.paid,nB=B.W-B.paid;rows.push({s:["صافي المستحق","ج.م",MO(nA),MO(nB),MO(nA+nB)]});
@@ -1853,7 +1861,7 @@ function stmtDoc(a,sd){
   const equip=grp("h:").map(([k,ls])=>{const e=byId(m.hourly,k.slice(2))||{};return{name:e.name||"معدة",rate:uniq(ls),ls,gross:ls.reduce((s,l)=>s+(l.gross!==undefined?n0(l.gross):n0(l.q)),0),dh:sum(ls,"dh"),q:sum(ls,"q"),w:sum(ls,"work")}});
   const items=grp("i:").map(([k,ls])=>{const it=byId(m.items,k.slice(2))||{};return{name:it.name||"بند",unit:it.unit||ls[0].u||"",rate:uniq(ls),ls,q:sum(ls,"q"),w:sum(ls,"work")}});
   const segs=work.filter(l=>l.seg&&!used.has(l));segs.forEach(l=>used.add(l));
-  const geo=work.filter(l=>l.eq==="g");geo.forEach(l=>used.add(l));
+  const geo=work.filter(l=>l.eq==="g");geo.forEach(l=>used.add(l));const wat=work.filter(l=>l.eq==="wa");wat.forEach(l=>used.add(l));
   const rest=work.filter(l=>!used.has(l));
   const pays=L.filter(l=>l.paid);const paid=pays.reduce((s,l)=>s+l.paid,0);const works=sd.work;
   const isW=a.kind==="wrk";const mon=MON();
@@ -1885,6 +1893,7 @@ function stmtDoc(a,sd){
   if(items.length){const rows=[];items.forEach(i=>{i.ls.forEach(l=>rows.push([dshort(l.date),i.name,F(l.q)+" "+i.unit,fmt(l.r,2),MO(l.work)]))});
     D.push({t:"table",title:"تفاصيل بنود بالعدد",cols:[["التاريخ",.14],["البند",.36],["الكمية",.18],["السعر",.14],["القيمة",.18]],rows,total:["الإجمالي","","","",MO(items.reduce((s,i)=>s+i.w,0))]})}
   if(segs.length)D.push({t:"table",title:isW?"تفاصيل الراتب":"تفاصيل الإيجار الشهري",cols:[["البيان",.52],["الأيام",.14],["الأجر اليومي",.16],["القيمة",.18]],rows:segs.map(l=>[l.desc,fmt(l.q,2),fmt(l.r,2),MO(l.work)]),total:["الإجمالي","","",MO(sum(segs,"work"))]});
+  if(wat.length)D.push({t:"table",title:"تفاصيل نقلات المياه"+(sd.ext?" (المستخلص الحالي)":""),cols:[["التاريخ",.16],["البيان",.34],["النقلات",.14],["سعر النقلة",.16],["القيمة",.2]],rows:wat.map(l=>[dshort(l.date),l.desc.replace(/^نقلات مياه: [^–]*(– )?/,"")||"نقلات مياه",fmt(l.q),fmt(l.r,2),MO(l.work)]),total:["الإجمالي","",fmt(sum(wat,"q")),"",MO(sum(wat,"work"))]});
   if(geo.length)D.push({t:"table",title:"تفاصيل الأعمال بالكمية",cols:[["التاريخ",.13],["البيان",.39],["الكمية",.16],["السعر",.14],["القيمة",.18]],rows:geo.map(l=>[dshort(l.date),l.desc,F(l.q)+" "+(l.u||""),fmt(l.r,2),MO(l.work)]),total:["الإجمالي","","","",MO(sum(geo,"work"))]});
   if(rest.length)D.push({t:"table",title:"قيود وتسويات",cols:[["التاريخ",.14],["البيان",.64],["القيمة",.22]],rows:rest.map(l=>[dshort(l.date),l.desc,MO(l.work)]),total:["الإجمالي","",MO(sum(rest,"work"))]});
   if(!work.length)D.push({t:"empty",text:"لا توجد أعمال مسجلة فى هذه الفترة"});
@@ -2098,7 +2107,7 @@ function exportFull(){
     (day.stin||[]).forEach(x=>SK.push([dd(d),x.ret?"ارتجاع":"شراء",stItem(x.it).name,n0(x.q),stItem(x.it).unit||"",x.ret?stWhoName(x):x.s||"",x.ret?"":r2(stInAmt(x)),x.n||""]));(day.stout||[]).forEach((x,i)=>SK.push([dd(d),x.k==="cus"?"عهدة":"صرف",stItem(x.it).name,n0(x.q),stItem(x.it).unit||"",stWhoName(x),x.k==="cus"?"":r2(stCost(d,"stout",i)),x.n||""]));(day.stc||[]).forEach(x=>SK.push([dd(d),"جرد",stItem(x.it).name,n0(x.q),stItem(x.it).unit||"","","",x.n||""]));
     day.dsl.forEach(x=>{const e=byId(m.monthly,x.e)||byId(m.hourly,x.e);DS.push([dd(d),e?e.name:(x.n||"أخرى"),num(x.l)||"",r2(dieselAmount(x,d)),x.n||""])});
     day.exp.forEach(x=>EP.push([dd(d),x.d||"",x.c||"",r2(n0(x.a)),x.m||"",x.rc||""]));
-    (day.wat||[]).forEach(x=>WA.push([dd(d),x.s||"",num(x.n)||"",num(x.p)||"",r2(watAmt(x)),x.m||"",x.nt||""]));
+    (day.wat||[]).forEach(x=>WA.push([dd(d),x.s||"",num(x.n)||"",num(x.p)||"",r2(watAmt(x,d)),x.m||"",x.nt||""]));
     day.inc.forEach(x=>{const p=byId(m.partners,x.p);IN.push([dd(d),x.src==="partner"?(p?p.name:"شريك"):x.src==="mst"?"مستخلص – الهيئة":"إيراد آخر",r2(n0(x.a)),x.m||"",x.ch||"",x.no||"",x.per||"",num(x.g)||"",num(x.ded)||"",x.n||""])});
   });
   add("ساعات المعدات",H,[12,22,22,8,8,8,20,12,10,14,16]);add("النقلات",TR,[12,14,22,10,10,10,10,14,16]);add("بنود بالعدد",IT,[12,24,22,10,10,10,14,20,16]);add("الحضور والعطل",EX,[12,12,22,12,10,30]);add("السولار",DS,[12,22,10,14,24]);add("المخزن",SK,[12,10,22,10,8,22,12,20]);add("المياه",WA,[12,24,10,12,14,12,24]);add("النثريات",EP,[12,30,24,14,14,12]);add("الوارد",IN,[12,22,14,12,12,12,14,14,14,24]);
@@ -2134,7 +2143,7 @@ async function importCommit(){if(!IMP)return;const dts=Object.keys(IMP).sort();l
 
 /* ============================================================ SETTINGS */
 const ENT={
-  suppliers:{title:"الموردون والمقاولون",fields:[["name","الاسم","text",1],["type","النوع","sel",1,Object.entries(SUPTYPE)],["_n1","معدات هذا المورد تُحاسب بالساعة أو بالإيجار الشهرى – السعر يُحدد فى بطاقة كل معدة، وليس هنا.","note",0,null,"equip"],["_n2","بنود هذا المورد (مثل نقلات المياه) تُضاف من قسم (بنود بالعدد) بسعرها ووحدتها.","note",0,null,"other"],["rate","سعر المتر م³ للنقل (يُطبق على كل سياراته ما لم يُحدد سعر للسيارة)","num",0,null,"truck"],["rate","سعر الوحدة للمقاول","num",0,null,"contractor"],["item","البند (للمقاول بالكمية)","text",0,null,"contractor"],["unit","الوحدة","sel",0,UNITS,"contractor"],["phone","الهاتف","text"],["note","ملاحظات","text"]],rateKey:"rates",rateLabel:"سعر المتر / الوحدة",cols:s=>{const r=rateAt(s.rates,todayStr());return[s.name,SUPTYPE[s.type]||"",s.type==="truck"?(r?fmt(r,2)+" ج/م³":"حسب سعر كل سيارة"):s.type==="contractor"?(r?fmt(r,2)+" ج/"+(s.unit||"م³"):"—"):s.type==="equip"?"حسب كل معدة (ساعة / شهرى)":"حسب البنود بالعدد"]},heads:["الاسم","النوع","طريقة المحاسبة"],noPeriod:true},
+  suppliers:{title:"الموردون والمقاولون",fields:[["name","الاسم","text",1],["type","النوع","sel",1,Object.entries(SUPTYPE)],["_n1","معدات هذا المورد تُحاسب بالساعة أو بالإيجار الشهرى – السعر يُحدد فى بطاقة كل معدة، وليس هنا.","note",0,null,"equip"],["_n2","بنود هذا المورد (مثل نقلات المياه) تُضاف من قسم (بنود بالعدد) بسعرها ووحدتها.","note",0,null,"other"],["rate","سعر المتر م³ للنقل (يُطبق على كل سياراته ما لم يُحدد سعر للسيارة)","num",0,null,"truck"],["rate","سعر الوحدة للمقاول","num",0,null,"contractor"],["rate","سعر نقلة المياه","num",0,null,"water"],["item","البند (للمقاول بالكمية)","text",0,null,"contractor"],["unit","الوحدة","sel",0,UNITS,"contractor"],["phone","الهاتف","text"],["note","ملاحظات","text"]],rateKey:"rates",rateLabel:"سعر المتر / الوحدة",cols:s=>{const r=rateAt(s.rates,todayStr());return[s.name,SUPTYPE[s.type]||"",s.type==="truck"?(r?fmt(r,2)+" ج/م³":"حسب سعر كل سيارة"):s.type==="contractor"?(r?fmt(r,2)+" ج/"+(s.unit||"م³"):"—"):s.type==="equip"?"حسب كل معدة (ساعة / شهرى)":"حسب البنود بالعدد"]},heads:["الاسم","النوع","طريقة المحاسبة"],noPeriod:true},
   hourly:{title:"معدات بالساعة",fields:[["type","النوع (حفار، بلدوزر…)","text",1],["name","الاسم / الرقم","text",1],["sup","المورد","sup",1,"equip"],["rate","سعر الساعة","num"],["from","تاريخ الدخول","date",1],["wt","الشغل المعتاد","sel",0,WTK.map(k=>[k,WT[k]])]],rateKey:"rates",rateLabel:"سعر الساعة",cols:e=>[e.name,e.type,supN(e.sup),fmt(rateAt(e.rates,todayStr()))],heads:["المعدة","النوع","المورد","سعر الساعة"]},
   monthly:{title:"معدات إيجار شهرى (الشهر = 26 يوم)",fields:[["type","النوع (جليدر، هراس، عربية مياه…)","text",1],["name","الاسم","text",1],["sup","المورد","sup",1,"equip"],["rate","الإيجار الشهرى","num"],["otr","سعر ساعة الإضافى","num"],["from","تاريخ دخول الموقع","date",1],["wt","الشغل المعتاد","sel",0,WTK.map(k=>[k,WT[k]])]],rateKey:"rates",otKey:"ot",rateLabel:"الإيجار الشهرى",cols:e=>[e.name,e.type,supN(e.sup),fmt(rateAt(e.rates,todayStr())),fmt(rateAt(e.ot,todayStr()))],heads:["المعدة","النوع","المورد","الإيجار الشهرى","ساعة الإضافى"]},
   trucks:{title:"سيارات النقل (بالمتر المكعب)",fields:[["plate","رقم السيارة","text",1],["sup","المورد المنسوب له السيارة","sup",1,"truck"],["cap","السعة / التكعيب (م³)","num",1],["rate","سعر المتر م³ (اختيارى – إن تُرك يُستخدم سعر المورد)","num"],["from","تاريخ الدخول","date",1],["wt","الشغل المعتاد","sel",0,WTK.map(k=>[k,WT[k]])]],rateKey:"rates",rateLabel:"سعر المتر م³ لهذه السيارة",cols:t=>[t.plate,supN(t.sup),fmt(t.cap,2)+" م³",fmt(truckRate(t,todayStr()),2)+" ج/م³"+(wrTxt(t,todayStr())?" ("+wrTxt(t,todayStr())+")":"")],heads:["السيارة","المورد","السعة","سعر المتر"]},
@@ -2281,7 +2290,7 @@ function dailySummary(date){const t=dayTotals(date);const d=t.d,m=M();const L=[`
   if(d.trk.length){L.push("*النقلات:*");let tl=0,tm=0;d.trk.forEach(x=>{const tr=byId(m.trucks,x.t);if(!tr)return;if(x.off){L.push(`• ${tr.plate}: لا تعمل`);return}tl+=n0(x.n);const v=truckM3(x,tr);tm+=v;L.push(`• ${tr.plate}: ${fmt(x.n)} نقلة = ${fmt(v,2)} م³${n0(x.dm)?` (بعد خصم ${fmt(x.dm,2)} م³)`:""}`)});L.push(`الإجمالى: ${fmt(tl)} نقلة / ${fmt(tm,2)} م³`)}
   if(d.itm.length){L.push("*بنود بالعدد:*");d.itm.forEach(x=>{const i=byId(m.items,x.i);if(i&&n0(x.n))L.push(`• ${i.name}: ${fmt(x.n,2)} ${i.unit||""}`)})}
   const ab=d.wex.filter(x=>x.k==="off");if(ab.length)L.push("*غياب:* "+ab.map(x=>(byId(m.workers,x.id)||{}).name).join("، "));
-  {const w=(d.wat||[]).filter(x=>watAmt(x)||n0(x.n));if(w.length){L.push("*المياه:*");w.forEach(x=>L.push(`• ${x.s||"مياه"}: ${n0(x.n)?fmt(x.n)+" نقلة – ":""}${money(watAmt(x))}`))}}
+  {const w=(d.wat||[]).filter(x=>watAmt(x,date)||n0(x.n));if(w.length){L.push("*المياه:*");w.forEach(x=>L.push(`• ${x.s||"مياه"}: ${n0(x.n)?fmt(x.n)+" نقلة – ":""}${money(watAmt(x,date))}`))}}
   {const si=(d.stin||[]).filter(x=>!x.ret),so=d.stout||[];if(si.length||so.length){L.push("*المخزن:*");si.forEach(x=>L.push(`• شراء ${stItem(x.it).name}: ${fmt(x.q,2)} ${stItem(x.it).unit||""} – ${money(stInAmt(x))}`));so.forEach(x=>L.push(`• ${x.k==="cus"?"عهدة":"صرف"} ${stItem(x.it).name} → ${stWhoName(x)}: ${fmt(x.q,2)} ${stItem(x.it).unit||""}`))}}
   if(d.exp.length){L.push("*المصروفات:*");d.exp.forEach(x=>{if(n0(x.a))L.push(`• ${x.d||x.c||""}: ${money(n0(x.a))}`)})}
   if(d.pay.length){L.push("*الدفعات:*");const c=compute();d.pay.forEach(x=>{const a=c.acc[x.acc];L.push(`• ${a?a.name:""}: ${money(n0(x.a))}`)})}
@@ -2299,7 +2308,7 @@ function dailyPdf(date){
   const wx=d.wex.filter(x=>x.k||n0(x.ot));if(wx.length)blocks.push({type:"table",title:"العمالة – استثناءات الحضور",cols:[["العامل",.35],["الحالة",.25],["إضافى",.15],["ملاحظة",.25]],rows:wx.map(x=>[(byId(m.workers,x.id)||{}).name||"",{"":"حاضر",half:"نصف يوم",off:"غياب",fri:"عمل الجمعة"}[x.k||""],n0(x.ot)?fmt(x.ot,1)+" س":"",x.r||""])});
   if((d.stin||[]).length||(d.stout||[]).length)blocks.push({type:"table",title:"المخزن – الوارد والصرف",cols:[["الحركة",.12],["الصنف",.22],["الكمية",.14],["إلى / من",.26],["القيمة",.14],["ملاحظة",.12]],rows:[...(d.stin||[]).map(x=>[x.ret?"ارتجاع":"شراء",stItem(x.it).name,fmt(x.q,2)+" "+(stItem(x.it).unit||""),x.ret?stWhoName(x):x.s||"",x.ret?"":money(stInAmt(x)),x.n||""]),...(d.stout||[]).map((x,i)=>[x.k==="cus"?"عهدة":"صرف",stItem(x.it).name,fmt(x.q,2)+" "+(stItem(x.it).unit||""),stWhoName(x),x.k==="cus"?"":money(stCost(date,"stout",i)),x.n||""])]});
   if(d.dsl.length)blocks.push({type:"table",title:"السولار",cols:[["المعدة",.4],["لترات",.2],["المبلغ",.2],["ملاحظة",.2]],rows:d.dsl.map(x=>{const e=byId(m.monthly,x.e)||byId(m.hourly,x.e);return[e?e.name:(x.n||"أخرى"),n0(x.l)?fmt(x.l):"",money(dieselAmount(x,date)),x.n||""]})});
-  if((d.wat||[]).length)blocks.push({type:"table",title:"المياه",cols:[["المورد / المصدر",.32],["النقلات",.12],["سعر النقلة",.14],["المبلغ",.16],["الطريقة",.12],["ملاحظة",.14]],rows:d.wat.map(x=>[x.s||"",n0(x.n)?fmt(x.n):"",n0(x.p)?fmt(x.p):"",money(watAmt(x)),x.m||"",x.nt||""]),total:["الإجمالى",fmt(d.wat.reduce((a,x)=>a+n0(x.n),0)),"",money(d.wat.reduce((a,x)=>a+watAmt(x),0)),"",""]});
+  if((d.wat||[]).length)blocks.push({type:"table",title:"المياه",cols:[["المورد / المصدر",.32],["النقلات",.12],["سعر النقلة",.14],["المبلغ",.16],["الطريقة",.12],["ملاحظة",.14]],rows:d.wat.map(x=>[x.s||"",n0(x.n)?fmt(x.n):"",n0(x.p)?fmt(x.p):"",money(watAmt(x,date)),x.m||"",x.nt||""]),total:["الإجمالى",fmt(d.wat.reduce((a,x)=>a+n0(x.n),0)),"",money(d.wat.reduce((a,x)=>a+watAmt(x,date),0)),"",""]});
   if(d.exp.length)blocks.push({type:"table",title:"المصروفات النثرية",cols:[["البيان",.34],["التصنيف",.26],["المبلغ",.16],["الطريقة",.12],["إيصال",.12]],rows:d.exp.map(x=>[x.d||"",x.c||"",money(n0(x.a)),x.m||"",x.rc||""]),total:["الإجمالى","",money(d.exp.reduce((s,x)=>s+n0(x.a),0)),"",""]});
   if(d.pay.length||d.adv.length){const c=compute();blocks.push({type:"table",title:"الدفعات والسلف",cols:[["الحساب",.36],["النوع",.14],["المبلغ",.18],["ملاحظة",.32]],rows:[...d.pay.map(x=>[(c.acc[x.acc]||{}).name||"","دفعة",money(n0(x.a)),x.n||""]),...d.adv.map(x=>[x.w?(byId(m.workers,x.w)||{}).name:x.nm,"سلفة",money(n0(x.a)),x.n||""])]})}
   if(d.geo.length)blocks.push({type:"table",title:"كميات المقاولين",cols:[["المقاول",.25],["البيان",.4],["الكمية",.15],["اعتماد",.2]],rows:d.geo.map(g=>[(byId(m.suppliers,g.c)||{}).name||"",g.d||"",fmt(g.q,2),g.sv||""])});
