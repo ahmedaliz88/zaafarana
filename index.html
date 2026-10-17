@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script>(function(){try{var m=matchMedia("(prefers-color-scheme: dark)");var f=function(){document.documentElement.setAttribute("data-theme",m.matches?"dark":"light")};f();if(m.addEventListener)m.addEventListener("change",f);else m.addListener(f)}catch(e){}})()</script>
 <title>يومية موقع الزعفرانة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -199,6 +199,7 @@ details.sec[open] .chev{transform:rotate(-45deg)}
 .fev .seg{flex:none}.fev .seg button{min-height:38px;padding:6px 13px;font-size:13.5px}
 .fev input{flex:1 1 100%;min-height:42px!important;text-align:right!important;font-size:14.5px!important;font-weight:400!important}
 body.eng .mny,body.eng .sec .tot{display:none!important}
+:root[data-theme="dark"] .seg button[aria-pressed="true"],:root[data-theme="dark"] .hrow .net b,:root[data-theme="dark"] .qkfav button[aria-pressed="true"],:root[data-theme="dark"] .pic .ph2,:root[data-theme="dark"] .dnav,:root[data-theme="dark"] .brand b,:root[data-theme="dark"] h3.st{color:var(--ink)}
 .qk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:12px;margin-bottom:10px;border-top:3px solid var(--gold)}
 .qkh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.qkh b{display:block;color:var(--navy);font-size:15.5px}.qkh small{color:var(--muted);font-size:12px}
 :root[data-theme="dark"] .qkh b{color:var(--ink)}
@@ -518,7 +519,7 @@ h3.st{font-size:15px;margin:16px 0 8px;color:var(--navy);border-bottom:3px solid
 .fg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
 .fc label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
 .fc input,.fc select{min-height:46px;border:1px solid var(--line);border-radius:11px;background:var(--field);text-align:center;font-size:17px;font-weight:600;width:100%;padding:6px}
-.fc input.t{text-align:right;font-size:14.5px;font-weight:400}
+.fc input.t{text-align:right;font-size:14.5px;font-weight:400}.fc input[inputmode],.hrow input[inputmode],.tk input[inputmode],.qkf input[inputmode]{direction:ltr}.qkf input[inputmode]{text-align:right}
 .fc .calc{min-height:46px;border-radius:11px;background:var(--sunk);display:grid;place-items:center;font-size:17px;font-weight:800;color:var(--navy)}
 :root[data-theme="dark"] .fc .calc{color:var(--ink)}
 .fc .big input{font-size:24px;font-weight:800}
