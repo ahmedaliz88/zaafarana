@@ -266,6 +266,9 @@ details.sec[data-sec][open]>.sb{border-inline-start:3px solid color-mix(in srgb,
 @media(max-width:560px){.pax span{font-size:9px}.pax span:nth-child(even){display:none}.plane b{width:70px;font-size:11px}.pax{margin-right:78px}}
 .tsplit{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:6px 0 0;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:8px}.tk.sp .ld{grid-column:1/-1}.tsadd{grid-column:1/-1}.tkwr{order:0}.tsplit select{min-width:150px;max-width:190px}.tsadd{display:block;margin:6px 0 2px;justify-self:start}
 .net select.in.mini{max-width:120px;margin-inline-end:6px}
+.extbar{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;box-shadow:inset 0 -3px 0 var(--gold)}
+.extbar b{display:block;font-size:15px}.extbar small{display:block;color:#C6CDE0;font-size:12.5px;margin-top:2px}.extbar.done{background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:inset 3px 0 0 var(--ok)}.extbar.done small{color:var(--muted)}
+.extprev .kpis{margin:4px 0}
 /* trucks */
 .tsup{display:flex;justify-content:space-between;align-items:center;padding:11px 0 6px;font-size:12.5px;color:var(--muted)}
 .tsup b{color:var(--navy);font-size:14px}
@@ -455,7 +458,7 @@ table.xl th{white-space:normal;line-height:1.25}
 .sth-prj{font-size:12.5px;color:var(--muted)}
 .sth-side{display:flex;flex-direction:column;gap:8px;align-items:stretch;text-align:center}
 .sth-per{background:var(--navy);color:#fff;border-radius:12px;padding:8px 18px;box-shadow:inset 0 -3px 0 var(--gold)}
-.sth-per small{display:block;font-size:11px;color:var(--gold2)}.sth-per b{font-size:19px;white-space:nowrap}
+.sth-per small{display:block;font-size:11px;color:var(--gold2)}.sth-per b{font-size:19px;white-space:nowrap}@media(max-width:720px){.sth-per{min-width:0;flex:1;padding:8px 12px}.sth-per b{font-size:15px;white-space:normal}.sth-side{flex-wrap:wrap;gap:8px}.sth-no{text-align:left}}
 .sth-no{font-size:11.5px;color:var(--muted);line-height:1.7}.sth-no b{color:var(--ink)}
 @media(max-width:600px){.sth{grid-template-columns:1fr}.sth h2{font-size:20px}.sth-side{flex-direction:row;align-items:center;justify-content:space-between;text-align:right}}
 .scards{display:grid;grid-template-columns:1fr 1fr 1fr 1.3fr;gap:10px;margin:12px 0 2px}
@@ -614,7 +617,7 @@ function IC(n,s){return`<svg class="ic" viewBox="0 0 24 24" style="width:${s||20
 
 /* ============================================================ state */
 const S={db:null,user:null,dl:null,local:false,uid:null,myName:"",isOwner:false,role:"none",perms:[],
-  master:null,days:{},entries:{},sealed:{},requests:{},joins:{},prod:{},chg:{},odraft:lsGet("zf_odraft")||{},qk:{t:"pay",m:"نقدى"},loaded:{},
+  master:null,days:{},entries:{},sealed:{},requests:{},joins:{},prod:{},chg:{},ext:{},odraft:lsGet("zf_odraft")||{},qk:{t:"pay",m:"نقدى"},loaded:{},
   tab:"home",date:todayStr(),cur:null,dirty:false,saving:false,again:false,timer:null,entTimers:{},
   acc:null,accFrom:"",accTo:"",accEq:"",accFilter:"all",repFrom:"",repTo:"",names:{},fieldDate:todayStr(),fieldDraft:{},auth:null,fbUser:null,roleDoc:null,accPerms:[],unsubs:[],roleUnsub:null,ownerMeta:null,entPending:{},roleSent:{},bootstrapping:false};
 function blankMaster(){return{suppliers:[],hourly:[],monthly:[],trucks:[],items:[],workers:[],partners:[],dieselPrices:[],cats:CATS.slice(),users:[],start:""}}
@@ -626,8 +629,8 @@ const M=()=>S.master||blankMaster();
 /* ============================================================ persistence */
 const LOCALKEY="zf_local_v1";
 function localAll(){return lsGet(LOCALKEY)||{}}
-function localApply(){const all=localAll();S.master=normMaster(all["master/main"]);S.days={};S.entries={};S.sealed={};S.requests={};S.joins={};S.prod={};S.chg={};
-  for(const[p,v]of Object.entries(all)){const[c,id]=p.split("/");if(c==="days")S.days[id]=v;else if(c==="entries")S.entries[id]=v;else if(c==="sealed")S.sealed[id]=v;else if(c==="requests")S.requests[id]=v;else if(c==="join")S.joins[id]=v;else if(c==="prod")S.prod[id]=v;else if(c==="chg")S.chg[id]=v}}
+function localApply(){const all=localAll();S.master=normMaster(all["master/main"]);S.days={};S.entries={};S.sealed={};S.requests={};S.joins={};S.prod={};S.chg={};S.ext={};
+  for(const[p,v]of Object.entries(all)){const[c,id]=p.split("/");if(c==="days")S.days[id]=v;else if(c==="entries")S.entries[id]=v;else if(c==="sealed")S.sealed[id]=v;else if(c==="requests")S.requests[id]=v;else if(c==="join")S.joins[id]=v;else if(c==="prod")S.prod[id]=v;else if(c==="chg")S.chg[id]=v;else if(c==="ext")S.ext[id]=v}}
 async function put(path,data){if(S.local){const all=localAll();all[path]=clone(data);lsSet(LOCALKEY,all);localApply();scheduleRender();return}await fbWait(S.db.doc(path).set(clone(data)));
   if(path.startsWith("days/")&&isMgr()){const d=path.slice(5);S.db.doc("dstat/"+d).set({status:data.status||"open",approved:!!data.approved}).catch(()=>{})}}
 async function patch(path,obj){if(S.local){const all=localAll();all[path]=Object.assign({},all[path]||{},clone(obj));lsSet(LOCALKEY,all);localApply();scheduleRender();return}
@@ -647,7 +650,7 @@ function subscribe(){
     coll(db.collection("days"),"days");coll(db.collection("entries"),"entries");coll(db.collection("requests").where("by","==",S.uid),"requests");
   }else if(isMgr()){
     U.push(db.doc("master/main").onSnapshot(s=>{S.master=normMaster(s.exists?clone(s.data()):null);S.loaded.master=true;if(isOwner()&&(S.master.users||[]).length)syncRoles(S.master).catch(()=>{});scheduleRender()},err));
-    coll(db.collection("days"),"days");coll(db.collection("entries"),"entries");coll(db.collection("sealed"),"sealed");coll(db.collection("chg"),"chg");
+    coll(db.collection("days"),"days");coll(db.collection("entries"),"entries");coll(db.collection("sealed"),"sealed");coll(db.collection("chg"),"chg");coll(db.collection("ext"),"ext");
     coll(isOwner()?db.collection("requests"):db.collection("requests").where("by","==",S.uid),"requests");
   }else if(S.role==="field"){
     coll(db.collection("entries").where("by","==",S.uid),"entries");
@@ -714,7 +717,7 @@ function compute(asOf){
   const A=(key,kind,name,meta)=>acc[key]||(acc[key]={key,kind,name,meta,lines:[],work:0,paid:0});
   m.suppliers.forEach(s=>A("sup:"+s.id,"sup",s.name,s));m.workers.forEach(w=>A("wrk:"+w.id,"wrk",w.name,w));m.partners.forEach(p=>A("par:"+p.id,"par",p.name,p));
   const W=(key,date,desc,v,eq,ex)=>{const a=acc[key];if(!a||!v)return;a.lines.push(Object.assign({date,desc,work:v,paid:0,eq,per:date.slice(0,7)},ex||{}));a.work+=v};
-  const P=(key,date,desc,v,eq,per)=>{const a=acc[key];if(!a||!v)return;a.lines.push({date,desc,work:0,paid:v,eq,per:per||date.slice(0,7)});a.paid+=v};
+  const P=(key,date,desc,v,eq,per,pid)=>{const a=acc[key];if(!a||!v)return;a.lines.push({date,desc,work:0,paid:v,eq,per:per||date.slice(0,7),pid:pid||""});a.paid+=v};
   const daily={};const D=d=>daily[d]||(daily[d]={works:0,cashIn:0,cashOut:0});
   const tre={in:0,out:0,lines:[]};const T=(date,desc,inn,out,cat)=>{tre.in+=inn;tre.out+=out;tre.lines.push({date,desc,inn,out,cat});D(date).cashIn+=inn;D(date).cashOut+=out};
   const issues=[];const cat={};const C=(k,v)=>{cat[k]=(cat[k]||0)+v};
@@ -729,8 +732,8 @@ function compute(asOf){
     day.geo.forEach(g=>{const s=byId(m.suppliers,g.c);if(!s)return;const r=num(g.r)??(rateAt(s.rates,d)||0);const v=n0(g.q)*r;D(d).works+=v;C("مقاولون بالكمية",v);
       W("sup:"+s.id,d,`${g.d||s.item||"كمية"}: ${fmt(g.q,2)} ${s.unit||"م³"} × ${fmt(r,2)}${g.sv?" – اعتماد: "+g.sv:""}`,v,"g",{q:n0(g.q),u:s.unit||"م³",r})});
     day.adj.forEach(x=>{const a=n0(x.a);if(!a)return;const pr=x.per?{per:x.per}:null;if(x.k==="deduct")W(x.acc,d,"خصم: "+(x.n||""),-a,"adj",pr);else W(x.acc,d,x.n||"قيد أعمال",a,"adj",pr);if(acc[x.acc])C(acc[x.acc].kind==="wrk"?"المرتبات":"أعمال أخرى (قيود)",x.k==="deduct"?-a:a)});
-    day.pay.forEach(x=>{const a=n0(x.a);if(!a)return;const ac=acc[x.acc];P(x.acc,d,"دفعة"+(x.m?" – "+x.m:"")+(x.n?" – "+x.n:""),a,"pay",x.per);T(d,"دفعة: "+(ac?ac.name:"؟")+(x.n?" – "+x.n:""),0,a,ac&&ac.kind==="wrk"?"مرتبات":"دفعات موردين")});
-    day.adv.forEach(x=>{const a=n0(x.a);if(!a)return;let key;if(x.w){key="wrk:"+x.w}else{key="oth:"+(x.nm||"سلف أخرى");A(key,"oth",x.nm||"سلف أخرى",{})}P(key,d,(x.n&&x.n.startsWith("سلفة")?x.n:"سلفة"+(x.n?" – "+x.n:"")),a,"adv",x.per);T(d,"سلفة: "+(acc[key]?acc[key].name:""),0,a,"سلف")});
+    day.pay.forEach(x=>{const a=n0(x.a);if(!a)return;const ac=acc[x.acc];P(x.acc,d,"دفعة"+(x.m?" – "+x.m:"")+(x.n?" – "+x.n:""),a,"pay",x.per,x.pid);T(d,"دفعة: "+(ac?ac.name:"؟")+(x.n?" – "+x.n:""),0,a,ac&&ac.kind==="wrk"?"مرتبات":"دفعات موردين")});
+    day.adv.forEach(x=>{const a=n0(x.a);if(!a)return;let key;if(x.w){key="wrk:"+x.w}else{key="oth:"+(x.nm||"سلف أخرى");A(key,"oth",x.nm||"سلف أخرى",{})}P(key,d,(x.n&&x.n.startsWith("سلفة")?x.n:"سلفة"+(x.n?" – "+x.n:"")),a,"adv",x.per,x.pid);T(d,"سلفة: "+(acc[key]?acc[key].name:""),0,a,"سلف")});
     (day.wat||[]).forEach(x=>{const a=watAmt(x);if(!a)return;T(d,"مياه: "+(x.s||"نقلات مياه")+(n0(x.n)?` (${fmt(x.n)} نقلة)`:""),0,a,"المياه");C("المياه",a);D(d).works+=a});
     day.exp.forEach(x=>{const a=n0(x.a);if(!a)return;T(d,(x.d||"مصروف")+(x.c?" ("+x.c+")":""),0,a,x.c||"متنوعة");C(x.c||"متنوعة",a);D(d).works+=a});
     day.dsl.forEach(x=>{const a=dieselAmount(x,d);if(!a)return;const e=byId(m.monthly,x.e)||byId(m.hourly,x.e);T(d,"سولار: "+(e?e.name:(x.n||"أخرى"))+(n0(x.l)?` (${fmt(x.l)} لتر)`:""),0,a,"سولار");C("سولار",a);D(d).works+=a;
@@ -738,8 +741,8 @@ function compute(asOf){
     day.inc.forEach(x=>{const a=n0(x.a);if(!a)return;let desc;if(x.src==="partner"){const p=byId(m.partners,x.p);desc="تمويل: "+(p?p.name:"شريك");if(acc["par:"+x.p]){acc["par:"+x.p].lines.push({date:d,per:d.slice(0,7),desc:"تمويل"+(x.m?" – "+x.m:"")+(x.ch?" – شيك "+x.ch:"")+(x.n?" – "+x.n:""),work:a,paid:0});acc["par:"+x.p].work+=a}}
       else if(x.src==="mst")desc=`مستخلص رقم ${x.no||"؟"} (${x.per||""}) – صافى`;else desc="إيراد: "+(x.n||"أخرى");T(d,desc,a,0,"وارد")});
   });
-  m.monthly.forEach(e=>accrue(e,"mex",asOf,(d,v)=>{D(d).works+=v;C("معدات شهرية",v)}).forEach(seg=>W("sup:"+e.sup,seg.to,seg.desc+(seg.notes.length?" – "+seg.notes.join("، "):""),seg.value,"m:"+e.id,{q:seg.days,u:"يوم",r:seg.daily,per:seg.from.slice(0,7),seg})));
-  m.workers.forEach(w=>accrue(w,"wex",asOf,(d,v)=>{D(d).works+=v;C("المرتبات",v)}).forEach(seg=>W("wrk:"+w.id,seg.to,"راتب "+seg.desc.replace(w.name+" – ","")+(seg.notes.length?" – "+seg.notes.join("، "):""),seg.value,"w",{q:seg.days,u:"يوم",r:seg.daily,per:seg.from.slice(0,7),seg})));
+  m.monthly.forEach(e=>{const dv={};accrue(e,"mex",asOf,(d,v)=>{D(d).works+=v;C("معدات شهرية",v);dv[d]=(dv[d]||0)+v}).forEach(seg=>W("sup:"+e.sup,seg.to,seg.desc+(seg.notes.length?" – "+seg.notes.join("، "):""),seg.value,"m:"+e.id,{q:seg.days,u:"يوم",r:seg.daily,per:seg.from.slice(0,7),seg,dv}))});
+  m.workers.forEach(w=>{const dv={};accrue(w,"wex",asOf,(d,v)=>{D(d).works+=v;C("المرتبات",v);dv[d]=(dv[d]||0)+v}).forEach(seg=>W("wrk:"+w.id,seg.to,"راتب "+seg.desc.replace(w.name+" – ","")+(seg.notes.length?" – "+seg.notes.join("، "):""),seg.value,"w",{q:seg.days,u:"يوم",r:seg.daily,per:seg.from.slice(0,7),seg,dv}))});
   Object.values(acc).forEach(a=>{a.lines.sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:0);a.bal=a.work-a.paid});
   tre.bal=tre.in-tre.out;tre.lines.sort((x,y)=>x.date<y.date?-1:1);MC=null;
   return{acc,tre,daily,issues,cat};
@@ -1624,9 +1627,59 @@ $("#main").addEventListener("change",e=>{if(S.tab!=="acc")return;const t=e.targe
 function eqOptionsFor(a){const m=M();if(a.kind!=="sup")return[];const id=a.meta.id;return[...m.hourly.filter(e=>e.sup===id).map(e=>["h:"+e.id,e.name]),...m.monthly.filter(e=>e.sup===id).map(e=>["m:"+e.id,e.name]),...m.trucks.filter(t=>t.sup===id).map(t=>["t:"+t.id,"سيارة "+t.plate]),...(m.items||[]).filter(i=>i.sup===id).map(i=>["i:"+i.id,i.name])]}
 function accMonths(a){return[...new Set(a.lines.map(l=>l.per||l.date.slice(0,7)))].sort()}
 const monLabel=m=>m?m.slice(5,7)+"/"+m.slice(0,4):"";
-function statementData(a){
+const XM=()=>!!(S.accMon&&String(S.accMon).startsWith("x:"));
+const MON=()=>S.accMon&&!XM()?S.accMon:null;
+const openLbl=()=>XM()?"رصيد المستخلصات السابقة":MON()?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة";
+function extsOf(key){return Object.entries(S.ext||{}).filter(([,x])=>x&&x.acc===key).map(([id,x])=>Object.assign({id},x)).sort((a,b)=>a.no-b.no)}
+function extPeriods(a){const L=extsOf(a.key);const P=L.map((x,i)=>({id:x.id,no:x.no,from:i?addDays(L[i-1].to,1):"0000",to:x.to,closed:true,doc:x}));const last=L[L.length-1];P.push({id:"cur",no:(last?last.no:0)+1,from:last?addDays(last.to,1):"0000",to:"9999",closed:false});return P}
+function extFirstDate(a){return a.lines.reduce((m,l)=>l.date&&l.date<m?l.date:m,todayStr())}
+function dvSum(dv,f,t){let s=0;for(const d in dv)if(d>=f&&d<=t)s+=dv[d];return s}
+function extPieces(lines,P){const out=[];
+  lines.forEach(l=>{
+    if(l.dv&&l.seg){const sf=l.seg.from,st=l.seg.to;const tot=dvSum(l.dv,sf,st);
+      P.forEach((p,i)=>{const f=sf>p.from?sf:p.from,t=st<p.to?st:p.to;if(f>t)return;const part=tot>0?dvSum(l.dv,f,t)/tot:(f===sf&&t===st?1:0);if(part<1e-6)return;
+        out.push(Object.assign({},l,{work:l.work*part,q:n0(l.q)*part,date:t,pi:i,desc:part<0.9999?l.desc+` [الجزء من ${dshort(f)} إلى ${dshort(t)}]`:l.desc}))});return}
+    let i=-1;if(l.pid)i=P.findIndex(p=>p.id===l.pid);
+    if(i<0)i=P.findIndex(p=>l.date>=p.from&&l.date<=p.to);if(i<0)i=P.length-1;
+    out.push(Object.assign({},l,{pi:i}))});
+  return out}
+function extCalc(a,P,k,eq){const lines=a.lines.filter(l=>!eq||l.eq===eq);const pcs=extPieces(lines,P);
+  const prev=pcs.filter(l=>l.pi<k),cur=pcs.filter(l=>l.pi===k).sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:(y.work-x.work));
+  const open=prev.reduce((s,l)=>s+l.work-l.paid,0);const work=cur.reduce((s,l)=>s+l.work,0),paid=cur.reduce((s,l)=>s+l.paid,0);return{prev,cur,open,work,paid,close:open+work-paid}}
+function extData(a){const P=extPeriods(a);const sel=S.accMon.slice(2);let k=sel==="cur"?P.length-1:P.findIndex(p=>p.id===sel);if(k<0)k=P.length-1;
+  const c=extCalc(a,P,k,S.accEq);let run=c.open;const rows=c.cur.map(l=>{run+=l.work-l.paid;return Object.assign({},l,{run})});
+  const qty={};c.cur.forEach(l=>{if(l.u&&l.q)qty[l.u]=(qty[l.u]||0)+l.q});
+  const adv=c.cur.filter(l=>l.eq==="adv").reduce((s,l)=>s+l.paid,0),pays=c.cur.filter(l=>l.eq==="pay").reduce((s,l)=>s+l.paid,0);
+  const p=P[k];const from=p.from==="0000"?extFirstDate(a):p.from;
+  return{open:c.open,rows,work:c.work,paid:c.paid,close:c.close,qty,segs:[],adv,pays,ext:{P,k,p,from,to:p.closed?p.to:todayStr(),prev:c.prev,cur:c.cur}}}
+function extAgg(ls){const g={nl:0,m3:0,dmm:0,hrs:0,dh:0,mdays:0,wdays:0,items:{},geo:{},w:{t:0,h:0,m:0,w:0,i:0,g:0,o:0},paid:0,adv:0};
+  ls.forEach(l=>{const e=l.eq||"";if(l.paid){g.paid+=l.paid;if(e==="adv")g.adv+=l.paid;return}if(!l.work)return;
+    if(e.startsWith("t:")){g.nl+=n0(l.nl);g.m3+=n0(l.q);g.dmm+=n0(l.dm);g.w.t+=l.work}
+    else if(e.startsWith("h:")){g.hrs+=n0(l.q);g.dh+=n0(l.dh);g.w.h+=l.work}
+    else if(e.startsWith("m:")){g.mdays+=n0(l.q);g.w.m+=l.work}
+    else if(e==="w"){g.wdays+=n0(l.q);g.w.w+=l.work}
+    else if(e.startsWith("i:")){const u=l.u||"";g.items[u]=(g.items[u]||0)+n0(l.q);g.w.i+=l.work}
+    else if(e==="g"){const u=l.u||"م³";g.geo[u]=(g.geo[u]||0)+n0(l.q);g.w.g+=l.work}
+    else g.w.o+=l.work});
+  g.W=Object.values(g.w).reduce((a,b)=>a+b,0);return g}
+function extSummary(a,sd){const A=extAgg(sd.ext.prev),B=extAgg(sd.ext.cur);const F=(v,d)=>Math.abs(v)>0.004?fmt(v,d??2):"–";const MO=v=>Math.abs(v)>0.004?(v<0?"("+money(-v)+")":money(v)):"–";const isW=a.kind==="wrk";
+  const rows=[];const q=(l,u,x,y,d)=>{if(Math.abs(x)>0.004||Math.abs(y)>0.004)rows.push([l,u,F(x,d),F(y,d),F(x+y,d)])};
+  rows.push({g:"الكميات المنفذة"});
+  q("عدد النقلات","نقلة",A.nl,B.nl,0);q("الكمية المنقولة (صافي)","م³",A.m3,B.m3);q("خصم الأمتار","م³",A.dmm,B.dmm);
+  q("ساعات التشغيل (صافي)","ساعة",A.hrs,B.hrs);q("ساعات الخصم","ساعة",A.dh,B.dh);q("أيام الإيجار الشهري","يوم",A.mdays,B.mdays,1);q(isW?"أيام العمل المستحقة":"أيام العمل","يوم",A.wdays,B.wdays,1);
+  [...new Set([...Object.keys(A.items),...Object.keys(B.items)])].forEach(u=>q("بنود بالعدد",u,A.items[u]||0,B.items[u]||0));
+  [...new Set([...Object.keys(A.geo),...Object.keys(B.geo)])].forEach(u=>q("أعمال بالكمية",u,A.geo[u]||0,B.geo[u]||0));
+  if(rows.length===1)rows.pop();
+  rows.push({g:"القيم المالية"});
+  const v=(l,x,y)=>{if(Math.abs(x)>0.004||Math.abs(y)>0.004)rows.push([l,"ج.م",MO(x),MO(y),MO(x+y)])};
+  v("قيمة أعمال النقل",A.w.t,B.w.t);v("قيمة تشغيل المعدات",A.w.h,B.w.h);v("قيمة الإيجار الشهري",A.w.m,B.w.m);v(isW?"الراتب المستحق (شامل الإضافي والخصم)":"أجور العمالة",A.w.w,B.w.w);v("بنود بالعدد",A.w.i,B.w.i);v("أعمال بالكمية",A.w.g,B.w.g);v("قيود وتسويات",A.w.o,B.w.o);
+  rows.push({s:["إجمالي قيمة الأعمال","ج.م",MO(A.W),MO(B.W),MO(A.W+B.W)]});
+  if(isW){v("السلف",-A.adv,-B.adv);v("مدفوعات أخرى",-(A.paid-A.adv),-(B.paid-B.adv))}else v("المسدد",-A.paid,-B.paid);
+  const nA=A.W-A.paid,nB=B.W-B.paid;rows.push({s:["صافي المستحق","ج.م",MO(nA),MO(nB),MO(nA+nB)]});
+  return{t:"table",title:"ملخص المستخلص – السابق والحالي والإجمالي",cols:[["البند",.32],["الوحدة",.1],["السابق",.18],["الحالي",.18],["الإجمالي حتى تاريخه",.22]],rows}}
+function statementData(a){if(XM())return extData(a);
   const eq=S.accEq;let lines=a.lines.filter(l=>!eq||l.eq===eq);let open=0,inRange;
-  if(S.accMon){const mo=S.accMon;lines.filter(l=>(l.per||l.date.slice(0,7))<mo).forEach(l=>open+=l.work-l.paid);inRange=lines.filter(l=>(l.per||l.date.slice(0,7))===mo).sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:(y.work-x.work))}
+  if(MON()){const mo=MON();lines.filter(l=>(l.per||l.date.slice(0,7))<mo).forEach(l=>open+=l.work-l.paid);inRange=lines.filter(l=>(l.per||l.date.slice(0,7))===mo).sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:(y.work-x.work))}
   else{const from=S.accFrom||"0000",to=S.accTo||"9999";lines.filter(l=>l.date<from).forEach(l=>open+=l.work-l.paid);inRange=lines.filter(l=>l.date>=from&&l.date<=to)}
   let run=open;const rows=inRange.map(l=>{run+=l.work-l.paid;return Object.assign({},l,{run})});
   const work=inRange.reduce((s,l)=>s+l.work,0),paid=inRange.reduce((s,l)=>s+l.paid,0);
@@ -1638,12 +1691,13 @@ function statementData(a){
 const qtyTxt=q=>Object.entries(q).map(([u,v])=>fmt(v,2)+" "+u).join(" + ")||"—";
 /* ============================================================ STATEMENT (design B: executive statement) */
 function stmtNo(a){const m=M();let idx=0,pre="P";if(a.kind==="sup"){idx=m.suppliers.findIndex(x=>"sup:"+x.id===a.key)+1;pre="S"}else if(a.kind==="wrk"){idx=m.workers.findIndex(x=>"wrk:"+x.id===a.key)+1;pre="W"}
-  const per=(S.accMon||(S.accTo||todayStr()).slice(0,7));return pre+pad(Math.max(idx,0))+"-"+per.slice(0,4)+per.slice(5,7)}
+  if(XM()&&S.acc){const ep=extSel(a);if(ep)return pre+pad(Math.max(idx,0))+"-E"+pad(ep.no)}
+  const per=(MON()||(S.accTo||todayStr()).slice(0,7));return pre+pad(Math.max(idx,0))+"-"+per.slice(0,4)+per.slice(5,7)}
 const MONTHS_AR=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 const monName=m=>m?MONTHS_AR[+m.slice(5,7)-1]+" "+m.slice(0,4):"";
 const prevMon=m=>{const d=parseD(m+"-01");d.setUTCMonth(d.getUTCMonth()-1);return strD(d).slice(0,7)};
 const nextMon=m=>{const d=parseD(m+"-01");d.setUTCMonth(d.getUTCMonth()+1);return strD(d).slice(0,7)};
-function stmtPeriodTxt(){return S.accMon?monName(S.accMon):(S.accFrom||S.accTo?`${S.accFrom?dd(S.accFrom):"البداية"} – ${S.accTo?dd(S.accTo):dd(todayStr())}`:"حتى "+dd(todayStr()))}
+function stmtPeriodTxt(){if(XM()&&S.acc){const c=compute();const a=c.acc[S.acc];const ep=a&&extSel(a);if(ep){const f=ep.from==="0000"?extFirstDate(a):ep.from;return`من ${dd(f)} إلى ${dd(ep.closed?ep.to:todayStr())}`+(ep.closed?"":" (جاري)")}}return MON()?monName(MON()):(S.accFrom||S.accTo?`${S.accFrom?dd(S.accFrom):"البداية"} – ${S.accTo?dd(S.accTo):dd(todayStr())}`:"حتى "+dd(todayStr()))}
 /* one model → screen, PDF and Excel */
 function stmtDoc(a,sd){
   const m=M();const L=sd.rows;const work=L.filter(l=>l.work);const used=new Set();
@@ -1659,7 +1713,7 @@ function stmtDoc(a,sd){
   const geo=work.filter(l=>l.eq==="g");geo.forEach(l=>used.add(l));
   const rest=work.filter(l=>!used.has(l));
   const pays=L.filter(l=>l.paid);const paid=pays.reduce((s,l)=>s+l.paid,0);const works=sd.work;
-  const isW=a.kind==="wrk";const mon=S.accMon;
+  const isW=a.kind==="wrk";const mon=MON();
   const D=[];
   D.push({t:"cards",items:[["إجمالي قيمة الأعمال",MO(works),"ج.م"],[isW?"السلف والمدفوع خلال الفترة":"المسدد خلال الفترة",MO(paid),"ج.م"],[(mon?"رصيد مرحّل من "+monName(prevMon(mon)).split(" ")[0]:"رصيد أول المدة"),sd.open<-0.5?"("+MO(-sd.open)+")":MO(sd.open),sd.open<-0.5?"ج.م – دفعة مقدمة":"ج.م"],[sd.close>=-0.5?"صافي المبلغ المستحق":"دفعة مقدمة (لصالح الخزنة)",MO(Math.abs(sd.close)),sd.close>0.5?"ج.م – مستحق السداد":"ج.م",1]]});
   // production summary
@@ -1670,18 +1724,19 @@ function stmtDoc(a,sd){
   if(items.length)prod.push({title:"بنود بالعدد",sub:items.length+" بند",rows:items.map(i=>[i.name,F(i.q),i.unit]),total:["إجمالي القيمة",MO(items.reduce((s,i)=>s+i.w,0)),"ج.م"]});
   if(!isW&&segs.length)prod.push({title:"إيجار شهري",sub:new Set(segs.map(l=>l.eq)).size+" معدة",rows:segs.map(l=>[(byId(m.monthly,(l.eq||"").slice(2))||{}).name||"معدة",fmt(l.q,2),"يوم"]),total:["إجمالي قيمة الإيجار",MO(sum(segs,"work")),"ج.م"]});
   if(geo.length){const u=geo[0].u||"م³";const rs=[...new Set(geo.map(l=>l.r))];prod.push({title:"أعمال بالكمية",sub:geo.length+" بند",rows:[["إجمالي الكمية",F(sum(geo,"q")),u],["السعر",rs.length===1?fmt(rs[0],2):"متعدد",rs.length===1?"ج/"+u:""]],total:["إجمالي القيمة",MO(sum(geo,"work")),"ج.م"]})}
-  if(prod.length)D.push({t:"prod",title:isW?"ملخص الشهر":"ملخص الإنتاج",cols:prod});
+  if(sd.ext){const e=sd.ext;D.length=0;D.push({t:"cards",items:[["أعمال المستخلص الحالي",MO(works),"ج.م"],[isW?"السلف والمدفوع فى المستخلص":"المسدد فى المستخلص",MO(paid),"ج.م"],["رصيد المستخلصات السابقة",sd.open<-0.5?"("+MO(-sd.open)+")":MO(sd.open),sd.open<-0.5?"ج.م – دفعة مقدمة":"ج.م"],[sd.close>=-0.5?"صافي المستحق حتى تاريخه":"دفعة مقدمة (لصالح الخزنة)",MO(Math.abs(sd.close)),sd.close>0.5?"ج.م – مستحق السداد":"ج.م",1]]});D.push(extSummary(a,sd))}
+  else if(prod.length)D.push({t:"prod",title:isW?"ملخص الشهر":"ملخص الإنتاج",cols:prod});
   // daily details
   if(trucks.length){const rows=[];trucks.forEach(t=>{rows.push({g:`${t.name} · تكعيب ${fmt(t.cap,2)} م³${t.rate!==null?" · سعر المتر "+fmt(t.rate,2)+" ج":""}`});
       const multi=new Set(t.ls.map(l=>l.wt)).size>1;t.ls.forEach(l=>rows.push([dshort(l.date)+(multi&&l.wt?" · "+WT[l.wt].replace("حفر ","").replace("طبقات ",""):""),fmt(l.nl),F(l.gross),n0(l.dm)?F(l.dm):"–",F(l.q),fmt(l.r,2),MO(l.work)]));
       rows.push({s:["إجمالي "+t.name,fmt(t.nl),F(t.gross),fmt(t.dm,2),F(t.q),"",MO(t.w)]})});
-    D.push({t:"table",title:"تفاصيل الأعمال اليومية – النقل",cols:[["التاريخ",.14],["النقلات",.12],["الأمتار م³",.15],["خصم م³",.13],["صافي م³",.15],["سعر المتر",.13],["القيمة",.18]],rows,
+    D.push({t:"table",title:"تفاصيل الأعمال اليومية – النقل"+(sd.ext?" (المستخلص الحالي)":""),cols:[["التاريخ",.14],["النقلات",.12],["الأمتار م³",.15],["خصم م³",.13],["صافي م³",.15],["سعر المتر",.13],["القيمة",.18]],rows,
       total:trucks.length>1?["إجمالي النقل",fmt(trucks.reduce((s,t)=>s+t.nl,0)),F(trucks.reduce((s,t)=>s+t.gross,0)),fmt(trucks.reduce((s,t)=>s+t.dm,0),2),F(trucks.reduce((s,t)=>s+t.q,0)),"",MO(trucks.reduce((s,t)=>s+t.w,0))]:null,
       note:trucks.some(t=>t.ls.some(l=>l.dr))?"أسباب الخصم: "+trucks.flatMap(t=>t.ls.filter(l=>l.dr).map(l=>`${t.name} ${dshort(l.date)}: ${l.dr}`)).join(" · "):""})}
   if(equip.length){const rows=[];equip.forEach(e=>{rows.push({g:`${e.name}${e.rate!==null?" · سعر الساعة "+fmt(e.rate,2)+" ج":""}`});
       const multi=new Set(e.ls.map(l=>l.wt)).size>1;e.ls.forEach(l=>rows.push([dshort(l.date)+(multi&&l.wt?" · "+WT[l.wt].replace("حفر ","").replace("طبقات ",""):""),l.s||"–",l.t||"–",F(l.gross),n0(l.dh)?F(l.dh):"–",F(l.q),fmt(l.r,2),MO(l.work)]));
       rows.push({s:["إجمالي "+e.name,"","",F(e.gross),fmt(e.dh,2),F(e.q),"",MO(e.w)]})});
-    D.push({t:"table",title:"تفاصيل الأعمال اليومية – المعدات",cols:[["التاريخ",.12],["من",.1],["إلى",.1],["ساعات التشغيل",.14],["الخصم",.1],["صافي الساعات",.14],["سعر الساعة",.12],["القيمة",.18]],rows,
+    D.push({t:"table",title:"تفاصيل الأعمال اليومية – المعدات"+(sd.ext?" (المستخلص الحالي)":""),cols:[["التاريخ",.12],["من",.1],["إلى",.1],["ساعات التشغيل",.14],["الخصم",.1],["صافي الساعات",.14],["سعر الساعة",.12],["القيمة",.18]],rows,
       total:equip.length>1?["إجمالي المعدات","","",F(equip.reduce((s,e)=>s+e.gross,0)),fmt(equip.reduce((s,e)=>s+e.dh,0),2),F(equip.reduce((s,e)=>s+e.q,0)),"",MO(equip.reduce((s,e)=>s+e.w,0))]:null,
       note:equip.some(e=>e.ls.some(l=>l.dr))?"أسباب الخصم: "+equip.flatMap(e=>e.ls.filter(l=>l.dr).map(l=>`${e.name} ${dshort(l.date)}: ${l.dr}`)).join(" · "):""})}
   if(items.length){const rows=[];items.forEach(i=>{i.ls.forEach(l=>rows.push([dshort(l.date),i.name,F(l.q)+" "+i.unit,fmt(l.r,2),MO(l.work)]))});
@@ -1691,10 +1746,13 @@ function stmtDoc(a,sd){
   if(rest.length)D.push({t:"table",title:"قيود وتسويات",cols:[["التاريخ",.14],["البيان",.64],["القيمة",.22]],rows:rest.map(l=>[dshort(l.date),l.desc,MO(l.work)]),total:["الإجمالي","",MO(sum(rest,"work"))]});
   if(!work.length)D.push({t:"empty",text:"لا توجد أعمال مسجلة فى هذه الفترة"});
   D.push({t:"table",title:isW?"السلف والمبالغ المدفوعة":"المبالغ المسددة",cols:[["تاريخ السداد",.18],["المبلغ",.2],["البيان",.62]],rows:pays.length?pays.map(l=>[dd(l.date),MO(l.paid),l.desc]):[["–","0","لا توجد مدفوعات خلال الفترة"]],total:pays.length>1?["الإجمالي",MO(paid),""]:null});
+  if(sd.ext){const e=sd.ext;const sr2=[["رصيد المستخلصات السابقة"+(sd.open<-0.5?" – دفعة مقدمة":""),sd.open<-0.5?"("+MO(-sd.open)+")":MO(sd.open)],["+ قيمة أعمال المستخلص الحالي",MO(works)],["− المسدد خلال المستخلص الحالي",MO(paid)]];
+    D.push({t:"settle",title:"التسوية المالية",rows:sr2,final:{l:sd.close>=-0.5?(isW?"صافي المستحق للعامل":"صافي المستحق للمورد"):"دفعة مقدمة – لصالح الخزنة",v:MO(Math.abs(sd.close))+" ج.م",note:e.p.closed?`يُرحّل إلى المستخلص رقم (${e.p.no+1})`:"المستخلص جاري – لم يُقفل بعد"}});return D}
   const sr=[];if(mon||sd.open)sr.push([(mon?"رصيد مرحّل من الشهر السابق ("+monName(prevMon(mon))+")":"رصيد أول المدة")+(sd.open<-0.5?" – دفعة مقدمة":""),sd.open<-0.5?"("+MO(-sd.open)+")":MO(sd.open)]);sr.push(["+ إجمالي قيمة الأعمال خلال الفترة",MO(works)],["− إجمالي المبالغ المسددة",MO(paid)]);
   D.push({t:"settle",title:"التسوية المالية",rows:sr,final:{l:sd.close>=-0.5?(isW?"الرصيد النهائي – مستحق للعامل":"الرصيد النهائي – مستحق للمورد"):"دفعة مقدمة – لصالح الخزنة",v:MO(Math.abs(sd.close))+" ج.م",note:mon?(sd.close>0.5?"يُرحّل إلى "+monName(nextMon(mon))+" ما لم يُسدد":"يُرحّل إلى "+monName(nextMon(mon))):""}});
   return D}
-function stmtHeadInfo(a){const eqName=S.accEq?(eqOptionsFor(a).find(x=>x[0]===S.accEq)||[])[1]:"";return{label:"كشف حساب مستحقات",name:a.name+(eqName?" – "+eqName:""),project:"طريق الزعفرانة – سفاجا · قطاع كونتراكتر 4+920 إلى 6+100",period:stmtPeriodTxt(),no:stmtNo(a),issued:dd(todayStr())}}
+function extSel(a){if(!XM())return null;const P=extPeriods(a);const sel=S.accMon.slice(2);return P.find(p=>p.id===sel)||P[P.length-1]}
+function stmtHeadInfo(a){const eqName=S.accEq?(eqOptionsFor(a).find(x=>x[0]===S.accEq)||[])[1]:"";const ep=extSel(a);return{label:ep?`مستخلص أعمال رقم (${ep.no})${ep.closed?"":" – جاري"}`:"كشف حساب مستحقات",name:a.name+(eqName?" – "+eqName:""),project:"طريق الزعفرانة – سفاجا · قطاع كونتراكتر 4+920 إلى 6+100",period:stmtPeriodTxt(),no:stmtNo(a),issued:dd(todayStr())}}
 function stmtHtml(a,D){const h=stmtHeadInfo(a);const cell=(c,i)=>`<td${i?' class="n"':""}>${esc(c)}</td>`;
   const out=[`<div class="sth"><div class="sth-main"><div class="sth-lbl">${esc(h.label)}</div><h2>${esc(h.name)}</h2><div class="sth-prj">${esc(h.project)}</div></div><div class="sth-side"><div class="sth-per"><small>الفترة المحاسبية</small><b>${esc(h.period)}</b></div><div class="sth-no">رقم الكشف <b class="num" dir="ltr">${esc(h.no)}</b><br>تاريخ الإصدار <b class="num">${esc(h.issued)}</b></div></div></div>`];
   D.forEach(s=>{
@@ -1716,21 +1774,48 @@ function stmtAoa(a,D){const h=stmtHeadInfo(a);const N=v=>{const t=String(v??"").
   return aoa}
 
 function stmtControls(a,mons,eqs,ledger){return`<div class="daybar"><button class="btn sm" data-accback="">← كل الحسابات</button>${a.kind==="par"?"":`<button class="btn sm" data-ledger="${ledger?0:1}" style="margin-inline-start:auto">${ledger?"الكشف الرسمي":"الدفتر التفصيلي"}</button>`}</div>
-  <div class="card toolbar"><label class="f">الشهر<select id="sMon">${opts([["","كل الفترة"],...mons.slice().reverse().map(m=>[m,monName(m)])],S.accMon,false)}</select></label>${S.accMon?"":`<label class="f">من تاريخ<input type="date" id="sFrom" value="${S.accFrom}"></label><label class="f">إلى تاريخ<input type="date" id="sTo" value="${S.accTo}"></label>`}${eqs.length?`<label class="f">المعدة / السيارة<select id="sEq">${opts(eqs,S.accEq,"كل المعدات والسيارات")}</select></label>`:""}
+  <div class="card toolbar"><label class="f">المستخلص / الفترة<select id="sMon">${opts([...(a.kind==="par"?[]:extPeriods(a).slice().reverse().map(p=>["x:"+p.id,p.closed?`مستخلص رقم ${p.no} (${p.from==="0000"?"البداية":dshort(p.from)} – ${dshort(p.to)})`:`المستخلص الجاري رقم ${p.no}`])),["","الحساب كامل"],...mons.slice().reverse().map(m=>[m,"شهر "+monName(m)])],S.accMon,false)}</select></label>${S.accMon?"":`<label class="f">من تاريخ<input type="date" id="sFrom" value="${S.accFrom}"></label><label class="f">إلى تاريخ<input type="date" id="sTo" value="${S.accTo}"></label>`}${eqs.length?`<label class="f">المعدة / السيارة<select id="sEq">${opts(eqs,S.accEq,"كل المعدات والسيارات")}</select></label>`:""}
     <div class="tb-act"><button class="btn gold" data-stmt="pdf">${IC("pdf",17)} كشف PDF</button><button class="btn" data-stmt="xlsx">Excel</button><button class="btn" data-stmt="wa">${IC("wa",17)} واتساب</button></div></div>`}
+function extBar(a,sd){if(!sd.ext||a.kind==="par")return"";const e=sd.ext,p=e.p;const can=S.role==="accountant"||isOwner();const lastClosed=e.P.filter(x=>x.closed).slice(-1)[0];
+  if(!p.closed)return`<div class="extbar"><div><b>المستخلص الجاري رقم (${p.no})</b><small>من ${dd(e.from)} حتى اليوم · ${sd.close>=0?"صافي المستحق":"دفعة مقدمة"} ${money(Math.abs(sd.close))} ج</small></div>${can?`<button class="btn gold" data-extclose="1">${IC("lock",16)} إقفال المستخلص</button>`:""}</div>`;
+  const d=p.doc||{};return`<div class="extbar done"><div><b>مستخلص رقم (${p.no}) – مقفول</b><small>من ${dd(e.from)} إلى ${dd(p.to)} · أُقفل ${d.at?new Date(d.at).toLocaleDateString("ar-EG"):""}${d.by?" بواسطة "+esc(nameSync(d.by)):""}${d.settle?` · دفعة تصفية ${money(d.settle)} ج`:""}${d.note?" · "+esc(d.note):""}</small></div>${isOwner()&&lastClosed&&lastClosed.id===p.id?`<button class="btn sm" data-extopen="${p.id}">إلغاء الإقفال</button>`:""}</div>`}
+async function extCloseFlow(a){const P=extPeriods(a);const k=P.length-1;const p=P[k];const from=p.from==="0000"?extFirstDate(a):p.from;const T=todayStr();
+  const calc=to=>{const Q=P.map(x=>Object.assign({},x));Q[k].to=to;Q.push({id:"after",from:addDays(to,1),to:"9999"});return extCalc(a,Q,k,"")};
+  const c0=calc(T);
+  const openDays=Object.keys(S.days).filter(d=>d>=from&&d<=T&&dayStatus(d)!=="closed").sort();
+  const ok=await modal({title:`إقفال المستخلص رقم (${p.no}) – ${a.name}`,body:`<p class="small muted">يُقفل المستخلص من ${dd(from)} حتى التاريخ اللى تختاره، والمتبقى يُرحّل كرصيد أول المستخلص رقم (${p.no+1}).</p>
+    ${openDays.length?`<div class="alert warn small">يوجد ${openDays.length} يومية غير مقفولة فى الفترة (${openDays.slice(-5).map(dshort).join("، ")}) – أى تعديل فيها لاحقًا يغيّر أرقام المستخلص.</div>`:""}
+    <div class="g w"><label class="f">نهاية المستخلص<input type="date" name="to" value="${T}" min="${from}" max="${T}" required data-extto="1"></label>
+    <div class="extprev" id="extPrev" style="grid-column:1/-1"></div>
+    <label class="f">دفعة تصفية الآن (اختيارى)<input name="sa" inputmode="decimal" placeholder="0"></label><label class="f">طريقة السداد<select name="m">${opts(METHODS,"نقدى",false)}</select></label>
+    <label class="f" style="grid-column:1/-1">ملاحظة<input name="note" placeholder="مثال: تصفية حساب حتى نهاية أسبوعين"></label></div>`,ok:"إقفال المستخلص",
+    onInit:f=>{const upd=()=>{const to=f.querySelector("[data-extto]").value||T;const c=calc(to);const sa=num(f.querySelector('[name="sa"]').value)||0;
+      f.querySelector("#extPrev").innerHTML=`<div class="kpis"><div><small>رصيد المستخلصات السابقة</small><strong>${money(c.open)}</strong></div><div><small>أعمال المستخلص</small><strong>${money(c.work)}</strong></div><div><small>المسدد فى المستخلص</small><strong>${money(c.paid+sa)}</strong></div><div><small>يُرحّل للمستخلص التالى</small><strong>${money(c.close-sa)}</strong></div></div>`};
+      f.addEventListener("input",upd);upd()},
+    onOk:async v=>{if(!v.to||v.to<from||v.to>T)return"اختر تاريخ نهاية صحيح";const sa=num(v.sa)||0;if(sa<0)return"دفعة التصفية لا تكون بالسالب";
+      const id=uid("x");const c=calc(v.to);
+      if(sa>0){if(S.dirty)await saveDay();if(!ownLock()&&!canEditDay(T))return"يومية اليوم مقفولة – افتحها أو سجّل التصفية بدون دفعة";
+        const day=normDay(clone(S.days[T]||{}),T);day.pay.push({acc:a.key,a:sa,m:v.m||"نقدى",n:`تصفية مستخلص رقم ${p.no}`,per:T.slice(0,7),pid:id});logAct(day,"دفعة تصفية مستخلص",a.name+" – "+money(sa));
+        try{if(ownLock())await proposeDay(T,day,`دفعة تصفية مستخلص رقم ${p.no} – ${a.name}`,"ext");else{await put("days/"+T,day);if(S.cur&&S.cur.date===T&&!S.dirty)S.cur=normDay(clone(day),T)}}catch(x){return"تعذر تسجيل الدفعة: "+errMsg(x)}}
+      try{await put("ext/"+id,{acc:a.key,name:a.name,no:p.no,from,to:v.to,at:new Date().toISOString(),by:S.uid||"",note:(v.note||"").trim(),open:r2(c.open),work:r2(c.work),paid:r2(c.paid+sa),close:r2(c.close-sa),settle:sa})}catch(x){return"تعذر الإقفال: "+errMsg(x)}
+      S.ext[id]=Object.assign(S.ext[id]||{},{acc:a.key,no:p.no,from,to:v.to});S.accMon="x:"+id;toast(`تم إقفال المستخلص رقم ${p.no}`+(sa&&ownLock()?" – دفعة التصفية بانتظار موافقة المحاسب":""));render()}})}
+$("#main").addEventListener("click",async e=>{if(S.tab!=="acc")return;const b=e.target.closest("[data-extclose],[data-extopen]");if(!b)return;const a=compute().acc[S.acc];if(!a)return;
+  if(b.dataset.extclose)return extCloseFlow(a);
+  if(b.dataset.extopen){if(!isOwner())return;const ok=await modal({title:"إلغاء إقفال المستخلص",body:"<p>المستخلص هيرجع جاري، وأعماله تتضم للمستخلص الحالى. دفعة التصفية (لو موجودة) تفضل مسجلة فى اليومية.</p>",ok:"إلغاء الإقفال",danger:true});if(!ok)return;
+    try{await remove("ext/"+b.dataset.extopen);delete S.ext[b.dataset.extopen];S.accMon="x:cur";toast("تم إلغاء الإقفال");render()}catch(x){toast("تعذر: "+errMsg(x))}}});
 function renderStatement(main,a){
-  const mons=accMonths(a);if(S.accMon===undefined||S.accMon===null)S.accMon=a.kind==="par"?"":(mons[mons.length-1]||"");if(S.accMon&&!mons.includes(S.accMon))S.accMon=mons[mons.length-1]||"";
+  const mons=accMonths(a);if(S.accMon===undefined||S.accMon===null)S.accMon=a.kind==="par"?"":"x:cur";if(XM()&&a.kind==="par")S.accMon="";if(XM()&&S.accMon!=="x:cur"&&!(S.ext||{})[S.accMon.slice(2)])S.accMon="x:cur";if(MON()&&!mons.includes(MON()))S.accMon=mons[mons.length-1]||"";
   const sd=statementData(a);const eqs=eqOptionsFor(a);
   const par=a.kind==="par";const hasQ=!par&&sd.rows.some(l=>l.q);const pro=!par&&!S.accLedger;
-  const wsum=a.kind==="wrk"&&S.accMon&&sd.segs.length?(()=>{const g=sd.segs[0];const offV=g.off*g.daily+g.half*g.daily/2,dhV=g.dhH*g.ot,otV=g.otH*g.ot,friV=g.fri*g.daily;
+  const wsum=a.kind==="wrk"&&MON()&&sd.segs.length?(()=>{const g=sd.segs[0];const offV=g.off*g.daily+g.half*g.daily/2,dhV=g.dhH*g.ot,otV=g.otH*g.ot,friV=g.fri*g.daily;
     return`<div class="kpis"><div><small>الراتب الشهرى</small><strong>${money(g.rate)}</strong></div><div><small>أيام العمل</small><strong>${fmt(g.days,1)}</strong></div><div><small>خصم غياب ${g.off||g.half?`(${g.off} يوم${g.half?` + ${g.half} نصف`:""})`:""}</small><strong>${money(offV)}</strong></div><div><small>خصم ساعات (${fmt(g.dhH,2)} س)</small><strong>${money(dhV)}</strong></div><div><small>إضافى (${fmt(g.otH,2)} س)${g.fri?` + جمعة ${g.fri}`:""}</small><strong>${money(otV+friV)}</strong></div><div><small>السلف خلال الشهر</small><strong>${money(sd.adv)}</strong></div><div><small>مستحق الشهر</small><strong>${money(sd.work)}</strong></div><div><small>المتبقى</small><strong style="color:var(--bad)">${money(sd.close)}</strong></div></div>`})():"";
-  if(pro){main.innerHTML=stmtControls(a,mons,eqs,false)+stmtHtml(a,stmtDoc(a,sd));return}
+  if(pro){main.innerHTML=stmtControls(a,mons,eqs,false)+extBar(a,sd)+stmtHtml(a,stmtDoc(a,sd));return}
   main.innerHTML=stmtControls(a,mons,eqs,true)+`<h2 class="pt">${par?"كشف حساب":"الدفتر التفصيلي"}: ${esc(a.name)}</h2>
-  ${S.accMon?`<div class="small muted" style="margin:-4px 0 8px">كشف شهر ${monLabel(S.accMon)}: الرصيد المرحّل من الشهور السابقة + أعمال ودفعات الشهر (كل دفعة على الشهر الذى تسدده). الرصيد آخر الشهر يُرحّل للشهر التالى.</div>`:""}
-  <div class="kpis"><div><small>${S.accMon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة"}</small><strong>${money(sd.open)}</strong></div>${hasQ?`<div><small>إجمالى الكمية</small><strong style="font-size:15px">${esc(qtyTxt(sd.qty))}</strong></div>`:""}<div><small>${par?"التمويل":"الأعمال / المستحق"}</small><strong>${money(sd.work)}</strong></div><div><small>المدفوع</small><strong>${money(sd.paid)}</strong></div><div><small>${par?"إجمالى التمويل":S.accMon?(sd.close>=0?"الرصيد آخر الشهر (مستحق له)":"الرصيد آخر الشهر (دفعة مقدمة)"):sd.close>=0?"الرصيد المستحق له":"دفعة مقدمة (لصالح الخزنة)"}</small><strong style="color:${sd.close>0.5&&!par?"var(--bad)":"inherit"}">${money(Math.abs(sd.close))}</strong></div></div>
+  ${MON()?`<div class="small muted" style="margin:-4px 0 8px">كشف شهر ${monLabel(MON())}: الرصيد المرحّل من الشهور السابقة + أعمال ودفعات الشهر (كل دفعة على الشهر الذى تسدده). الرصيد آخر الشهر يُرحّل للشهر التالى.</div>`:""}
+  <div class="kpis"><div><small>${openLbl()}</small><strong>${money(sd.open)}</strong></div>${hasQ?`<div><small>إجمالى الكمية</small><strong style="font-size:15px">${esc(qtyTxt(sd.qty))}</strong></div>`:""}<div><small>${par?"التمويل":"الأعمال / المستحق"}</small><strong>${money(sd.work)}</strong></div><div><small>المدفوع</small><strong>${money(sd.paid)}</strong></div><div><small>${par?"إجمالى التمويل":MON()?(sd.close>=0?"الرصيد آخر الشهر (مستحق له)":"الرصيد آخر الشهر (دفعة مقدمة)"):sd.close>=0?"الرصيد المستحق له":"دفعة مقدمة (لصالح الخزنة)"}</small><strong style="color:${sd.close>0.5&&!par?"var(--bad)":"inherit"}">${money(Math.abs(sd.close))}</strong></div></div>
   ${wsum}
   <div class="tw"><table><thead><tr><th>التاريخ</th><th>البيان</th>${hasQ?'<th class="n">الكمية</th><th class="n">السعر</th>':""}<th class="n">${par?"تمويل":"أعمال / مستحق"}</th><th class="n">مدفوع</th><th class="n">الرصيد</th></tr></thead><tbody>
-  ${sd.open||S.accMon?`<tr><td>—</td><td>${S.accMon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة"}</td>${hasQ?"<td></td><td></td>":""}<td></td><td></td><td class="n">${money(sd.open)}</td></tr>`:""}
+  ${sd.open||MON()?`<tr><td>—</td><td>${openLbl()}</td>${hasQ?"<td></td><td></td>":""}<td></td><td></td><td class="n">${money(sd.open)}</td></tr>`:""}
   ${sd.rows.map(l=>`<tr><td class="num">${dd(l.date)}</td><td class="wrap">${esc(l.desc)}</td>${hasQ?`<td class="n">${l.q?fmt(l.q,2)+" "+esc(l.u||""):""}</td><td class="n">${l.r?fmt(l.r,2):""}</td>`:""}<td class="n">${l.work?money(l.work):""}</td><td class="n">${l.paid?money(l.paid):""}</td><td class="n">${money(l.run)}</td></tr>`).join("")||`<tr><td colspan="${hasQ?7:5}" class="empty">لا توجد حركات فى هذه الفترة</td></tr>`}
   <tr class="tot"><td></td><td>الإجمالى</td>${hasQ?`<td class="n">${esc(qtyTxt(sd.qty))}</td><td></td>`:""}<td class="n">${money(sd.work)}</td><td class="n">${money(sd.paid)}</td><td class="n">${money(sd.close)}</td></tr></tbody></table></div>`;
 }
@@ -1777,25 +1862,25 @@ async function statementAction(kind){
     return makePdf("كشف الخزنة",periodLabel(),[{type:"kpis",items:[["رصيد أول المدة",money(open)],["رصيد آخر المدة",money(run)]]},{type:"table",cols:[["التاريخ",.11],["البيان",.37],["التصنيف",.16],["وارد",.12],["منصرف",.12],["الرصيد",.12]],rows}],"كشف_الخزنة.pdf")}
   const a=c.acc[S.acc];if(!a)return;const sd=statementData(a);const eqName=S.accEq?(eqOptionsFor(a).find(x=>x[0]===S.accEq)||[])[1]:"";
   const title="كشف حساب: "+a.name+(eqName?" – "+eqName:"");
-  const hasQ=a.kind!=="par"&&sd.rows.some(l=>l.q);const openL=S.accMon?"رصيد مرحّل من الشهر السابق":"رصيد أول المدة";const closeL=S.accMon?"الرصيد آخر الشهر – يُرحّل":(sd.close>=0?"المستحق له":"دفعة مقدمة");
-  if(a.kind!=="par"&&!S.accLedger&&(kind==="pdf"||kind==="xlsx")){const D=stmtDoc(a,sd);const fn=safe("كشف_حساب_"+a.name+(S.accMon?"_"+S.accMon:""));
+  const hasQ=a.kind!=="par"&&sd.rows.some(l=>l.q);const openL=openLbl();const closeL=MON()?"الرصيد آخر الشهر – يُرحّل":(sd.close>=0?"المستحق له":"دفعة مقدمة");
+  if(a.kind!=="par"&&!S.accLedger&&(kind==="pdf"||kind==="xlsx")){const D=stmtDoc(a,sd);const fn=safe("كشف_حساب_"+a.name+(MON()?"_"+MON():""));
     if(kind==="pdf")return makePdf(null,null,stmtPdfBlocks(a,D),fn+".pdf");
     if(typeof XLSX==="undefined")return toast("مكتبة Excel لم تُحمّل");const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};const ws=XLSX.utils.aoa_to_sheet(stmtAoa(a,D));ws["!cols"]=[{wch:34},{wch:16},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:16}];ws["!views"]=[{RTL:true}];XLSX.utils.book_append_sheet(wb,ws,"كشف الحساب");return saveFile(fn+".xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}
-  if(kind==="pdf"){const rows=[];if(sd.open||S.accMon)rows.push(hasQ?["—",openL,"","","","",money(sd.open)]:["—",openL,"","",money(sd.open)]);
+  if(kind==="pdf"){const rows=[];if(sd.open||MON())rows.push(hasQ?["—",openL,"","","","",money(sd.open)]:["—",openL,"","",money(sd.open)]);
     sd.rows.forEach(l=>rows.push(hasQ?[dd(l.date),l.desc,l.q?fmt(l.q,2)+" "+(l.u||""):"",l.r?fmt(l.r,2):"",l.work?money(l.work):"",l.paid?money(l.paid):"",money(l.run)]:[dd(l.date),l.desc,l.work?money(l.work):"",l.paid?money(l.paid):"",money(l.run)]));
     const cols=hasQ?[["التاريخ",.1],["البيان",.32],["الكمية",.12],["السعر",.08],["أعمال",.13],["مدفوع",.12],["الرصيد",.13]]:[["التاريخ",.12],["البيان",.46],["أعمال",.14],["مدفوع",.14],["الرصيد",.14]];
     const total=hasQ?["","الإجمالى",qtyTxt(sd.qty),"",money(sd.work),money(sd.paid),money(sd.close)]:["","الإجمالى",money(sd.work),money(sd.paid),money(sd.close)];
     const k=[[openL,money(sd.open)]];if(hasQ)k.push(["إجمالى الكمية",qtyTxt(sd.qty)]);k.push(["الأعمال / المستحق",money(sd.work)],["المدفوع",money(sd.paid)],[closeL,money(Math.abs(sd.close))]);
     const blocks=[{type:"kpis",items:k.slice(0,5)}];
-    if(a.kind==="wrk"&&S.accMon&&sd.segs.length){const g=sd.segs[0];blocks.push({type:"table",title:"ملخص الراتب",cols:[["الراتب",.15],["أيام العمل",.12],["خصم غياب",.15],["خصم ساعات",.15],["إضافى",.13],["السلف",.15],["المتبقى",.15]],rows:[[money(g.rate),fmt(g.days,1),money(g.off*g.daily+g.half*g.daily/2),money(g.dhH*g.ot),money(g.otH*g.ot+g.fri*g.daily),money(sd.adv),money(sd.close)]]})}
+    if(a.kind==="wrk"&&MON()&&sd.segs.length){const g=sd.segs[0];blocks.push({type:"table",title:"ملخص الراتب",cols:[["الراتب",.15],["أيام العمل",.12],["خصم غياب",.15],["خصم ساعات",.15],["إضافى",.13],["السلف",.15],["المتبقى",.15]],rows:[[money(g.rate),fmt(g.days,1),money(g.off*g.daily+g.half*g.daily/2),money(g.dhH*g.ot),money(g.otH*g.ot+g.fri*g.daily),money(sd.adv),money(sd.close)]]})}
     blocks.push({type:"table",cols,rows,total},{type:"sign",items:["توقيع المورد / المستلم","المحاسب","المالك"]});
-    return makePdf(title,periodLabel(),blocks,safe("كشف_حساب_"+a.name+(S.accMon?"_"+S.accMon:""))+".pdf")}
-  if(kind==="xlsx"){if(typeof XLSX==="undefined")return toast("مكتبة Excel لم تُحمّل");const aoa=[[title],[periodLabel()],[],["التاريخ","البيان","الكمية","الوحدة","السعر","أعمال / مستحق","مدفوع","الرصيد"]];if(sd.open||S.accMon)aoa.push(["",openL,"","","","","",r2(sd.open)]);sd.rows.forEach(l=>aoa.push([dd(l.date),l.desc,l.q?r2(l.q):"",l.q?l.u||"":"",l.r?r2(l.r):"",r2(l.work)||"",r2(l.paid)||"",r2(l.run)]));Object.entries(sd.qty).forEach(([u,v],i)=>aoa.push(["",i?"":"إجمالى الكمية",r2(v),u,"","","",""]));aoa.push(["","الإجمالى","","","",r2(sd.work),r2(sd.paid),r2(sd.close)]);
+    return makePdf(title,periodLabel(),blocks,safe("كشف_حساب_"+a.name+(MON()?"_"+MON():""))+".pdf")}
+  if(kind==="xlsx"){if(typeof XLSX==="undefined")return toast("مكتبة Excel لم تُحمّل");const aoa=[[title],[periodLabel()],[],["التاريخ","البيان","الكمية","الوحدة","السعر","أعمال / مستحق","مدفوع","الرصيد"]];if(sd.open||MON())aoa.push(["",openL,"","","","","",r2(sd.open)]);sd.rows.forEach(l=>aoa.push([dd(l.date),l.desc,l.q?r2(l.q):"",l.q?l.u||"":"",l.r?r2(l.r):"",r2(l.work)||"",r2(l.paid)||"",r2(l.run)]));Object.entries(sd.qty).forEach(([u,v],i)=>aoa.push(["",i?"":"إجمالى الكمية",r2(v),u,"","","",""]));aoa.push(["","الإجمالى","","","",r2(sd.work),r2(sd.paid),r2(sd.close)]);
     const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=[{wch:12},{wch:56},{wch:10},{wch:8},{wch:10},{wch:16},{wch:14},{wch:16}];ws["!views"]=[{RTL:true}];XLSX.utils.book_append_sheet(wb,ws,"كشف الحساب");return saveFile(safe("كشف_حساب_"+a.name)+".xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}
   if(kind==="wa"){const txt=`*كشف حساب مستحقات – ${a.name}*\n${stmtPeriodTxt()} · رقم ${stmtNo(a)}\n${openL}: ${money(sd.open)}${hasQ?"\nإجمالى الكمية: "+qtyTxt(sd.qty):""}\nالأعمال / المستحق: ${money(sd.work)}\nالمدفوع: ${money(sd.paid)}\n*${sd.close>=0?"المستحق له":"دفعة مقدمة لصالح الخزنة"}: ${money(Math.abs(sd.close))} ج*\n— كونتراكتر للمقاولات العامة`;waModal(txt,title)}
 }
 const r2=v=>Math.round((v||0)*100)/100;
-function periodLabel(){if(S.tab==="acc"&&S.accMon)return"كشف شهر "+monName(S.accMon);return S.accFrom||S.accTo?`الفترة من ${S.accFrom?dd(S.accFrom):"البداية"} إلى ${S.accTo?dd(S.accTo):dd(todayStr())}`:`حتى ${dd(todayStr())}`}
+function periodLabel(){if(S.tab==="acc"&&XM())return stmtPeriodTxt();if(S.tab==="acc"&&MON())return"كشف شهر "+monName(MON());return S.accFrom||S.accTo?`الفترة من ${S.accFrom?dd(S.accFrom):"البداية"} إلى ${S.accTo?dd(S.accTo):dd(todayStr())}`:`حتى ${dd(todayStr())}`}
 
 /* ============================================================ REPORTS */
 function evlName(k,id){const m=M();if(k==="h"){const e=byId(m.hourly,id);return[e?e.name:"معدة",e?e.sup:""]}if(k==="t"){const t=byId(m.trucks,id);return[t?"سيارة "+t.plate:"سيارة",t?t.sup:""]}const e=byId(m.monthly,id);return[e?e.name:"معدة شهرية",e?e.sup:""]}
@@ -2107,7 +2192,7 @@ async function makePdf(title,subtitle,blocks,filename){
   for(const b of blocks){
     if(b.type==="head"){const h=b.info;const bw=300;
       font(700,16);txt(h.label,W-MX,y+18,"right","#9A7A1C");font(700,38);txt(fit(h.name,W-2*MX-bw-30),W-MX,y+66,"right","#1B2A4A");font(400,17);txt(fit(h.project,W-2*MX-bw-30),W-MX,y+98,"right","#5B6475");
-      rr(MX,y,bw,84,14,"#1B2A4A");ctx.fillStyle="#C9A227";ctx.fillRect(MX+14,y+80,bw-28,4);font(500,15);txt("الفترة المحاسبية",MX+bw/2,y+28,"center","#E7CF7A");font(700,30);txt(h.period,MX+bw/2,y+66,"center","#fff");
+      rr(MX,y,bw,84,14,"#1B2A4A");ctx.fillStyle="#C9A227";ctx.fillRect(MX+14,y+80,bw-28,4);font(500,15);txt("الفترة المحاسبية",MX+bw/2,y+28,"center","#E7CF7A");{let fs=30;font(700,fs);while(fs>16&&ctx.measureText(h.period).width>bw-28){fs-=1;font(700,fs)}txt(h.period,MX+bw/2,y+66,"center","#fff")}
       font(400,15);txt("رقم الكشف",MX+bw,y+112,"right","#5B6475");ctx.direction="ltr";font(700,15);ctx.fillStyle="#1B2A4A";ctx.textAlign="left";ctx.fillText(h.no,MX+bw/2-6,y+112);ctx.fillText(h.issued,MX,y+136);ctx.direction="rtl";font(400,15);txt("تاريخ الإصدار",MX+bw,y+136,"right","#5B6475");y+=156}
     else if(b.type==="cards"){need(130);const n=b.items.length,gap=14,tw=W-2*MX;const ws=b.items.map(it=>it[3]?1.3:1);const tot=ws.reduce((a,c)=>a+c,0);let x=W-MX;
       b.items.forEach(([l,v,u,hi],i)=>{const cw=(tw-gap*(n-1))*ws[i]/tot;x-=cw;rr(x,y,cw,110,14,hi?"#1B2A4A":"#F7F8FB",hi?null:"#E1E5EC");if(hi){ctx.fillStyle="#C9A227";ctx.fillRect(x+14,y+106,cw-28,4)}

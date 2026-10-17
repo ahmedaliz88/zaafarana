@@ -110,6 +110,12 @@ service cloud.firestore {
         && request.resource.data.status == 'cancel'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedAt']);
     }
+    // مستخلصات الحساب (إقفال فترة حساب مورد / عامل): المحاسب أو المالك يقفل، والمالك فقط يلغي الإقفال
+    match /ext/{id} {
+      allow read: if isMgr();
+      allow create: if isMgr() && request.resource.data.by == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
     match /sealed/{d} {
       allow read: if isMgr();
       allow write: if isOwner();
