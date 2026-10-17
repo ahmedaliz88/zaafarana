@@ -90,6 +90,8 @@ service cloud.firestore {
         && (resource == null || resource.data.by == request.auth.uid)
         // after a supervisor hands in (sub = true) only the owner can reopen it
         && (resource == null || resource.data.get('sub', false) == false)
+        // only the accountant approves / rejects supervisor rows (apv map)
+        && (isAcc() || request.resource.data.get('apv', {}) == (resource == null ? {} : resource.data.get('apv', {})))
         && !dayClosed(request.resource.data.date);
     }
     // production parts (cut / fill layers by chainage): engineer records, owner and accountant view
