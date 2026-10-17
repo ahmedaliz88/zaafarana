@@ -56,8 +56,8 @@ service cloud.firestore {
       allow read: if isMgr() || isEng();
       allow write: if isOwner();
       allow update: if isAcc()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suppliers', 'hourly', 'monthly', 'trucks', 'items'])
-        && keeps('suppliers') && keeps('hourly') && keeps('monthly') && keeps('trucks') && keeps('items');
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['suppliers', 'hourly', 'monthly', 'trucks', 'items', 'stock', 'own'])
+        && keeps('suppliers') && keeps('hourly') && keeps('monthly') && keeps('trucks') && keeps('items') && keeps('stock') && keeps('own');
     }
     match /days/{d} {
       allow read: if isMgr() || isEng();
