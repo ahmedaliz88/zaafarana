@@ -4,6 +4,12 @@
 .apr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 2px;border-top:1px dashed var(--line,#E3E7EE)}.apr:first-of-type{border-top:0}.apr input{width:18px;height:18px}
 .qkdist{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:end;background:rgba(154,100,22,.06);border:1px dashed rgba(154,100,22,.35);border-radius:10px;padding:8px}.qkdist>span{flex-basis:100%}.qkdist .f{width:110px}
 [data-theme="dark"] .tag.apw,[data-theme="dark"] .pill.apw{background:#4A3510;color:#FFD08A;border-color:#7A5A20}[data-theme="dark"] .apb.no{background:transparent}[data-theme="dark"] .apb.ok{background:#123A26;color:#9FE3BD}
+.cdr.mod{background:rgba(196,160,70,.10);border-inline-start:3px solid #C4A046}.cdr .ctag{font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px;background:rgba(0,0,0,.06)}.cdr.add .ctag{background:#DDF3E6;color:#11663D}.cdr.rem .ctag{background:#FDE4E4;color:#A11}.cdr.mod .ctag{background:#F6E8C3;color:#7A5A10}
+.cba{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:3px;font-size:13px}.cba .was{color:#A11;text-decoration:line-through;text-decoration-color:rgba(170,17,17,.45)}.cba .now{color:#11663D;font-weight:700}
+.odiff{max-height:55vh;overflow:auto;margin-bottom:6px}.cdsum{display:flex;flex-direction:column;gap:4px;background:var(--soft,#F3F5F9);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:13px}.cdsum i{font-style:normal;font-weight:800;unicode-bidi:isolate}.cdsum i.up{color:#A11}.cdsum i.dn{color:#11663D}
+#foot.odr .fact .fib{display:none}#foot.odr .fstat{min-width:0;flex:1 1 auto}#foot.odr #saveTxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;vertical-align:bottom}
+@media(max-width:520px){#foot.odr .foot-in{flex-wrap:wrap;row-gap:8px}#foot.odr .fstat{flex-basis:calc(100% - 52px)}#foot.odr .fact{flex-basis:100%;display:flex;gap:6px}#foot.odr .fact .btn{flex:1 1 0;padding-inline:8px;white-space:nowrap}}
+[data-theme="dark"] .cdr.add .ctag{background:#123A26;color:#9FE3BD}[data-theme="dark"] .cdr.rem .ctag{background:#4A1A1A;color:#FFB0B0}[data-theme="dark"] .cdr.mod .ctag{background:#4A3A10;color:#FFD98A}[data-theme="dark"] .cba .was{color:#FF9C9C}[data-theme="dark"] .cba .now{color:#8FE0B0}
 </style></head><body><script>(function(){try{var m=matchMedia("(prefers-color-scheme: dark)");var f=function(){document.documentElement.setAttribute("data-theme",m.matches?"dark":"light")};f();if(m.addEventListener)m.addEventListener("change",f);else m.addListener(f)}catch(e){}})()</script>
 <title>يومية موقع الزعفرانة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -810,7 +816,7 @@ async function saveDay(){
     if(keys.length)S.odraft[date]=clone(S.cur);else delete S.odraft[date];saveODraft();
     const free={};FREEK.forEach(k=>{if(canon(base[k]||[])!==canon(S.cur[k]||[]))free[k]=clone(S.cur[k]||[])});
     if(Object.keys(free).length){S.saving=true;try{await patch("days/"+date,Object.assign({date},free))}catch(e){setSave("err","تعذر حفظ التقييم: "+errMsg(e))}finally{S.saving=false}}
-    setSave(keys.length?"busy":"ok",keys.length?`تعديل فى ${keys.length} قسم – أرسله للمحاسب`:"تم الحفظ");ownBar();return}
+    setSave(keys.length?"busy":"ok",keys.length?`تعديل فى ${keys.length} ${keys.length===1?"قسم":"أقسام"} – لم يُرسل`:"تم الحفظ");ownBar();return}
   S.saving=true;S.dirty=false;const body=clone(S.cur);body.updatedAt=new Date().toISOString();body.updatedBy=S.uid||"";
   try{await put("days/"+body.date,body);setSave("ok","تم الحفظ "+new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}))}
   catch(e){S.dirty=true;setSave("err",e&&e.code==="permission-denied"?"ليس لديك صلاحية الحفظ":"تعذر الحفظ – ستتم إعادة المحاولة");if(!(e&&e.code==="permission-denied"))setTimeout(saveDay,4000)}
@@ -857,10 +863,20 @@ function rowParts(k,r,date){const m=M();const nm=(l,id)=>(byId(l,id)||{}).name||
 const rowTxt=(k,r,date)=>rowParts(k,r,date).filter(Boolean).join(": ");
 function rowsDiff(bef,aft){const cb=bef.map(canon),ca=aft.map(canon);const used=new Set();const rem=[],add=[];
   bef.forEach((r,i)=>{const j=ca.findIndex((c,jj)=>c===cb[i]&&!used.has(jj));if(j>=0)used.add(j);else rem.push(r)});aft.forEach((r,j)=>{if(!used.has(j))add.push(r)});return{rem,add}}
+const RKEY={hourly:"e",trk:"t",mex:"id",wex:"id",itm:"i",dsl:"e",pay:"acc",adv:"w",exp:"d",wat:"sup",geo:"c",inc:"p",adj:"acc",stin:"it",stout:"it",stc:"it"};
+function diffHtml(date,bef,aft,keys){return keys.map(k=>{if(k==="notes")return`<div class="cdk"><b>${KN[k]}</b><div class="cdr rem">قبل: ${esc(bef.notes||"(فارغ)")}</div><div class="cdr add">بعد: ${esc(aft.notes||"(فارغ)")}</div></div>`;
+  const D=rowsDiff(kv(bef,k)||[],kv(aft,k)||[]);const kk=RKEY[k];const rem=D.rem.slice(),add=D.add.slice(),mod=[];
+  if(kk)for(let i=rem.length-1;i>=0;i--){const j=add.findIndex(a=>(a[kk]||a.s||"")===(rem[i][kk]||rem[i].s||""));if(j>=0){mod.unshift([rem[i],add[j]]);rem.splice(i,1);add.splice(j,1)}}
+  const P=r=>rowParts(k,r,date);
+  return`<div class="cdk"><b>${KN[k]||k}</b>${mod.map(([a,b])=>{const pa=P(a),pb=P(b);return`<div class="cdr mod"><span class="ctag">تعديل</span> <b>${esc(pb[0]||pa[0])}</b><div class="cba"><span class="was">قبل: ${esc(pa[1]||"")}</span><span class="now">بعد: ${esc(pb[1]||"")}</span></div></div>`}).join("")}${add.map(r=>`<div class="cdr add"><span class="ctag">إضافة</span> ${esc(rowTxt(k,r,date))}</div>`).join("")}${rem.map(r=>`<div class="cdr rem"><span class="ctag">حذف</span> ${esc(rowTxt(k,r,date))}</div>`).join("")}${!mod.length&&!add.length&&!rem.length?'<div class="small muted">تغيير فى الترتيب فقط</div>':""}</div>`}).join("")}
+function odraftHtml(date){const dr=S.odraft[date];if(!dr)return"";const base=normDay(clone(S.days[date]||{}),date);const keys=dayDiff(base,dr);if(!keys.length)return'<p class="small muted">لا توجد تعديلات</p>';
+  let dv="";try{const sv=S.cur;S.cur=base;MC=null;SL=null;const t0=dayTotals(date);S.cur=normDay(clone(dr),date);MC=null;SL=null;const t1=dayTotals(date);S.cur=sv;MC=null;SL=null;const d1=t1.works-t0.works,d2=t1.out-t0.out;
+    dv=`<div class="cdsum"><span>تكلفة اليوم: <b class="num">${money(t0.works)}</b> ← <b class="num">${money(t1.works)}</b>${Math.abs(d1)>.5?` <i class="${d1>0?"up":"dn"}" dir="ltr">(${d1>0?"+":"−"}${money(Math.abs(d1))})</i>`:""}</span><span>منصرف الخزنة: <b class="num">${money(t0.out)}</b> ← <b class="num">${money(t1.out)}</b>${Math.abs(d2)>.5?` <i class="${d2>0?"up":"dn"}" dir="ltr">(${d2>0?"+":"−"}${money(Math.abs(d2))})</i>`:""}</span></div>`}catch(e){}
+  return dv+diffHtml(date,base,dr,keys)}
 function chgBody(id,c){const st={pending:["بانتظار موافقة المحاسب","warn"],ok:["تمت الموافقة وطُبق","ok"],no:["رفضه المحاسب","bad"],cancel:["ألغاه المالك",""]}[c.status]||[c.status,""];
   let det="";
   if(c.kind==="full")det=`<div class="cdk"><b>${c.path.startsWith("days/")?"يومية كاملة":"إدخال مشرف كامل"}</b><div class="small muted">${c.src==="restore"?"من نسخة احتياطية – ":""}${ARR.reduce((a,k)=>a+((c.after||{})[k]||[]).length,0)} سطر</div></div>`;
-  else det=(c.keys||[]).map(k=>{if(k==="notes")return`<div class="cdk"><b>${KN[k]}</b><div class="cdr rem">− ${esc(c.before.notes||"(فارغ)")}</div><div class="cdr add">+ ${esc(c.after.notes||"(فارغ)")}</div></div>`;
+  else det=diffHtml(c.date,c.before||{},c.after||{},c.keys||[]);if(false)det=(c.keys||[]).map(k=>{if(k==="notes")return`<div class="cdk"><b>${KN[k]}</b><div class="cdr rem">− ${esc(c.before.notes||"(فارغ)")}</div><div class="cdr add">+ ${esc(c.after.notes||"(فارغ)")}</div></div>`;
     const D=rowsDiff(c.before[k]||[],c.after[k]||[]);return`<div class="cdk"><b>${KN[k]||k}</b>${D.rem.map(r=>`<div class="cdr rem">− ${esc(rowTxt(k,r,c.date))}</div>`).join("")}${D.add.map(r=>`<div class="cdr add">+ ${esc(rowTxt(k,r,c.date))}</div>`).join("")}${!D.rem.length&&!D.add.length?'<div class="small muted">تغيير فى الترتيب فقط</div>':""}</div>`}).join("");
   let stale=false;if(c.status==="pending"&&c.kind!=="full"){const cur=normDay(clone(S.days[c.date]||{}),c.date);stale=(c.keys||[]).some(k=>canon(kv(cur,k))!==canon(c.before[k]??(k==="notes"?"":[])))}
   const canDec=c.status==="pending"&&S.role==="accountant";const canCancel=c.status==="pending"&&isOwner()&&c.by===S.uid;
@@ -1037,7 +1053,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-act]
 
 /* ============================================================ DAY (manager) */
 function openDay(date){if(S.dirty)saveDay();S.date=date;S.cur=ownLock()&&S.odraft&&S.odraft[date]?normDay(clone(S.odraft[date]),date):normDay(clone(S.days[date]||{}),date)}
-function ownBar(){if(S.tab!=="day"||!S.cur)return;const has=!!(ownLock()&&S.odraft[S.cur.date]);const f=$("#foot .fact");if(!f)return;const ex=f.querySelector("[data-oprop]");const cl=f.querySelector('[data-day="close"]');if(cl)cl.hidden=has;if(has&&!ex){f.insertAdjacentHTML("afterbegin",`<span data-oprop="1" style="display:contents"><button class="btn ghost" data-day="odiscard">إلغاء التعديل</button><button class="btn gold" data-day="opropose">إرسال للمحاسب</button></span>`)}else if(!has&&ex)ex.remove()}
+function ownBar(){if(S.tab!=="day"||!S.cur)return;const has=!!(ownLock()&&S.odraft[S.cur.date]);const f=$("#foot .fact");if(!f)return;const ex=f.querySelector("[data-oprop]");const cl=f.querySelector('[data-day="close"]');if(cl)cl.hidden=has;$("#foot").classList.toggle("odr",has);if(has&&!ex){f.insertAdjacentHTML("afterbegin",`<span data-oprop="1" style="display:contents"><button class="btn ghost" data-day="oview">${IC("search",15)} عرض التعديل</button><button class="btn ghost" data-day="odiscard">إلغاء</button><button class="btn gold" data-day="opropose">إرسال للمحاسب</button></span>`)}else if(!has&&ex)ex.remove()}
 function dayTotals(date){const d=mergedDay(date,true);const m=M();let works=0,out=0,inn=0;const P={};let _w=0;const snap=k=>{P[k]=(P[k]||0)+works-_w;_w=works};
   d.hourly.forEach(h=>{const e=byId(m.hourly,h.e);if(e)works+=hourlyHours(h)*(rateAt(e.rates,date)||0)});snap("h");
   d.trk.forEach(x=>{const t=byId(m.trucks,x.t);if(!t)return;works+=truckM3(x,t)*truckRate(t,date,rowWt("t",x,date))});snap("t");
@@ -1211,9 +1227,9 @@ function renderDayInner(main){
   ${(day&&day.log&&day.log.length)?`<div class="small muted" style="margin-top:8px"><b>سجل اليوم:</b><br>${day.log.map(l=>`${new Date(l.at).toLocaleString("ar-EG")} – ${esc(nameSync(l.by))}: ${esc(l.act)}${l.note?" ("+esc(l.note)+")":""}`).join("<br>")}</div>`:""}`,"",S.cur.notes?"g":"")}
   </div></form>`;
   // footer
-  const foot=$("#foot");foot.hidden=false;
+  const foot=$("#foot");foot.hidden=false;foot.classList.toggle("odr",!!(ownLock()&&S.odraft[S.date]));
   const acts=[];
-  if(ownLock()&&S.odraft[date])acts.push(`<span data-oprop="1" style="display:contents"><button class="btn ghost" data-day="odiscard">إلغاء التعديل</button><button class="btn gold" data-day="opropose">إرسال للمحاسب</button></span>`);
+  if(ownLock()&&S.odraft[date])acts.push(`<span data-oprop="1" style="display:contents"><button class="btn ghost" data-day="oview">${IC("search",15)} عرض التعديل</button><button class="btn ghost" data-day="odiscard">إلغاء</button><button class="btn gold" data-day="opropose">إرسال للمحاسب</button></span>`);
   else if((edit||aOpen)&&st!=="closed")acts.push(`<button class="btn gold" data-day="close">إقفال اليومية</button>`);
   if(st==="closed"&&S.role==="accountant")acts.push(`<button class="btn gold" data-day="request">طلب تعديل</button>`);
   if(st==="closed"&&isOwner()&&!day.approved)acts.push(`<button class="btn ghost" data-day="reopen">فتح</button><button class="btn gold" data-day="approve">اعتماد</button>`);
@@ -1328,8 +1344,9 @@ function copyHourly(only){const y=mergedDay(addDays(S.cur.date,-1),false);const 
 async function dayAction(a){
   const date=S.cur.date;
   if(a==="opropose"){if(S.dirty)await saveDay();const dr=S.odraft[date];if(!dr)return toast("لا توجد تعديلات");const base=normDay(clone(S.days[date]||{}),date);const keys=dayDiff(base,dr);
-    const ok=await modal({title:"إرسال التعديل للمحاسب – "+dd(date),body:`<p>الأقسام المعدّلة: <b>${keys.map(k=>KN[k]||k).join("، ")}</b></p><p class="small muted">التعديل لن يُطبق على اليومية إلا بعد موافقة المحاسب.</p><label class="f">سبب التعديل<textarea name="reason" placeholder="مثال: تصحيح ساعات البلدوزر حسب السركى"></textarea></label>`,ok:"إرسال"});if(!ok)return;
+    const ok=await modal({title:"إرسال التعديل للمحاسب – "+dd(date),body:`<p class="small" style="margin:0 0 6px">راجع تعديلك قبل الإرسال:</p><div class="odiff">${odraftHtml(date)}</div><p class="small muted">التعديل لن يُطبق على اليومية إلا بعد موافقة المحاسب.</p><label class="f">سبب التعديل<textarea name="reason" placeholder="مثال: تصحيح ساعات البلدوزر حسب السركى"></textarea></label>`,ok:"إرسال"});if(!ok)return;
     try{await proposeDay(date,dr,(ok.reason||"").trim(),"day");delete S.odraft[date];saveODraft();S.cur=normDay(clone(S.days[date]||{}),date);toast("تم إرسال التعديل للمحاسب – بانتظار موافقته");render()}catch(x){toast("تعذر الإرسال: "+errMsg(x))}return}
+  if(a==="oview"){if(S.dirty)await saveDay();if(!S.odraft[date])return toast("لا توجد تعديلات");const ok=await modal({title:"تعديلك على يومية "+dd(date)+" (لم يُرسل)",body:`<div class="odiff">${odraftHtml(date)}</div>`,ok:"إرسال للمحاسب"});if(ok)return dayAction("opropose");return}
   if(a==="odiscard"){const ok=await modal({title:"إلغاء التعديل",body:"<p>هل تريد إلغاء تعديلاتك على هذا اليوم والرجوع للنسخة الحالية؟</p>",ok:"إلغاء التعديل",danger:true});if(!ok)return;delete S.odraft[date];saveODraft();S.dirty=false;S.cur=normDay(clone(S.days[date]||{}),date);render();return}
   if(a==="close"&&ownLock()&&S.odraft[date])return toast("أرسل تعديلاتك للمحاسب أو ألغها قبل الإقفال");
   if(a==="close"){if(S.dirty)await saveDay();{const pr=pendRows(date).filter(x=>x.st==="pend");if(pr.length){await modal({title:"لا يمكن إقفال اليومية",body:`<p>فيه <b>${pr.length}</b> سطر من إدخالات المشرفين لسه بانتظار موافقة المحاسب.</p><p class="small muted">راجعها الأول (موافقة أو رفض) من «تسليم المشرفين» فى أول اليومية، وبعدين اقفل.</p>`,ok:"حسنًا"});return}}const t=dayTotals(date);
