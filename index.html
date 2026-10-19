@@ -10,6 +10,7 @@
 #foot.odr .fact .fib{display:none}#foot.odr .fstat{min-width:0;flex:1 1 auto}#foot.odr #saveTxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;vertical-align:bottom}
 @media(max-width:520px){#foot.odr .foot-in{flex-wrap:wrap;row-gap:8px}#foot.odr .fstat{flex-basis:calc(100% - 52px)}#foot.odr .fact{flex-basis:100%;display:flex;gap:6px}#foot.odr .fact .btn{flex:1 1 0;padding-inline:8px;white-space:nowrap}}
 [data-theme="dark"] .cdr.add .ctag{background:#123A26;color:#9FE3BD}[data-theme="dark"] .cdr.rem .ctag{background:#4A1A1A;color:#FFB0B0}[data-theme="dark"] .cdr.mod .ctag{background:#4A3A10;color:#FFD98A}[data-theme="dark"] .cba .was{color:#FF9C9C}[data-theme="dark"] .cba .now{color:#8FE0B0}
+.qr .qe{border:0;background:rgba(27,36,64,.07);color:var(--ink,#1B2440);border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;flex:none}[data-theme="dark"] .qr .qe{background:rgba(255,255,255,.08);color:#E6EAF5}
 </style></head><body><script>(function(){try{var m=matchMedia("(prefers-color-scheme: dark)");var f=function(){document.documentElement.setAttribute("data-theme",m.matches?"dark":"light")};f();if(m.addEventListener)m.addEventListener("change",f);else m.addListener(f)}catch(e){}})()</script>
 <title>يومية موقع الزعفرانة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -231,7 +232,7 @@ body.eng .mny,body.eng .sec .tot{display:none!important}
 .qkf .qkgo{min-height:44px;white-space:nowrap}
 .qkhint{min-height:18px;margin-top:6px;color:var(--muted)}
 .qkl{margin-top:8px;border-top:1px solid var(--line2)}
-.qr{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line2)}
+.qr{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line2)}
 .qr .qn{min-width:0}.qr .qn b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qr .qn small{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qr .qa{font-weight:700;font-size:14.5px}.qr .qa.out{color:var(--bad)}.qr .qa.in{color:var(--ok)}
 .qkmore{display:block;padding:8px 2px;font-size:13px}.qr .x{position:static;width:30px;height:30px}.qr.qt{border-bottom:0;background:var(--field);border-radius:8px;padding:8px}
@@ -1085,7 +1086,7 @@ function byTag(r){if(!(r._src&&r._src.startsWith("ent:")))return"";const id=r._s
 function focusKey(el){if(!el||!el.dataset||!el.closest||!el.closest("#dayForm")||el.dataset.qk)return null;return["arr","k","src","i","e","t","it","exf","id","evln"].map(k=>el.dataset[k]||"").join("|")+"|"+el.tagName}
 function renderDay(main){
   const fk=focusKey(document.activeElement);const ae=document.activeElement;if(!S.qkFocus&&ae&&ae.dataset&&ae.dataset.qk&&ae.id)S.qkFocus=ae.id;
-  renderDayInner(main);
+  S.rnd=true;try{renderDayInner(main)}finally{S.rnd=false}
   if(fk){const el=[...main.querySelectorAll("#dayForm input,#dayForm select")].find(x=>focusKey(x)===fk);if(el){const det=el.closest("details");if(det)det.open=true;try{el.focus({preventScroll:true})}catch(e){el.focus()}}}
   if(S.qkFocus){const el=document.getElementById(S.qkFocus);S.qkFocus=null;if(el){try{el.focus({preventScroll:true})}catch(e){el.focus()}}}
 }
@@ -1487,7 +1488,7 @@ function qkFavs(t,date){const m=M();const ds=Object.keys(S.days).filter(d=>d<=da
     if(t==="dsl"){(x.dsl||[]).forEach(r=>{if(r.s)add(r.s,r.s)});(x.stin||[]).forEach(r=>{if(r.it==="diesel"&&r.s)add(r.s,r.s)})}
     if(t==="inc")(x.inc||[]).forEach(r=>{if(r.src==="partner")add(r.p,(byId(m.partners,r.p)||{}).name)})});
   return Object.entries(cnt).sort((a,b)=>b[1].n-a[1].n||a[1].o-b[1].o).slice(0,8)}
-function qkRead(){const q=S.qk;["W","A","M","N","C","D","Q","P","S"].forEach(k=>{const el=document.getElementById("qk"+k);if(el)q[k.toLowerCase()]=el.value});const ls=document.querySelectorAll("[data-ql]");if(ls.length){q.L={};ls.forEach(el=>{if(el.value)q.L[el.dataset.ql]=el.value})}}
+function qkRead(){if(S.rnd)return;const q=S.qk;["W","A","M","N","C","D","Q","P","S"].forEach(k=>{const el=document.getElementById("qk"+k);if(el)q[k.toLowerCase()]=el.value});const ls=document.querySelectorAll("[data-ql]");if(ls.length){q.L={};ls.forEach(el=>{if(el.value)q.L[el.dataset.ql]=el.value})}}
 function qkHintTxt(){const q=S.qk;const CP=S.qkCP;if(q.t==="pay"&&q.w&&CP&&CP.acc[q.w]){const b=CP.acc[q.w].bal;return b>=0?`مستحق له الآن: <b class="num">${money(b)}</b> ج`+(num(q.a)>b+0.5?' <span class="wtag">⚠ المبلغ أكبر من المستحق</span>':""):`مدفوع له زيادة: <b class="num">${money(-b)}</b> ج`}
   if(q.t==="wat"){const v=num(q.a)??(n0(q.q)*n0(q.p));return v?`قيمة المياه: <b class="num">${money(v)}</b> ج`:""}
   if(q.t==="dsl"){const l=Object.values(q.L||{}).reduce((a,v)=>a+n0(v),0);return l?`الإجمالى: <b class="num">${fmt(l)}</b> لتر × ${fmt(n0(q.p),2)} = <b class="num">${money(l*n0(q.p))}</b> ج (تخرج من الخزنة وتتحسب على المعدات)`:"اكتب لترات كل معدة – الشراء والصرف مرة واحدة"}
@@ -1513,9 +1514,25 @@ function qkCard(date,CP,edit){const m=M();const q=S.qk;const t=q.t;S.qkCP=CP;
   ${favs.length?`<div class="qkfav"><span>متكرر:</span>${favs.map(([k,v])=>`<button type="button" data-qkf="${esc(k)}" aria-pressed="${(t==="exp"?(q.c||"")+"|"+(q.d||""):q.w)===k}">${esc(v.l)}</button>`).join("")}</div>`:""}
   <div class="qkf${t==="dsl"?" qkd":""}">${who}${t==="dsl"?"":N("qkA",t==="wat"&&q.s?"مدفوع الآن":t==="wat"?"أو المبلغ":"المبلغ",q.a,"0",1,"amt")}${O("qkM","الطريقة",METHODS,q.m||"نقدى",false)}${t==="exp"?"":N("qkN","ملاحظة",q.n,"")}<button type="button" class="btn pri qkgo" data-qkadd="1">${IC("plus",16)} تسجيل</button></div>
   <div class="small qkhint" id="qkHint">${qkHintTxt()}</div>`:""}
-  ${rows.length?`<div class="qkl">${(S.qkAll||rows.length<=5?rows:rows.slice(-4)).map(r=>`<div class="qr"><span class="pill ${r.inn?"ok":r.k==="adv"?"warn":""}">${r.l}</span><div class="qn"><b>${esc(r.pt)}</b>${r.dt||r.m?`<small>${esc([r.dt,r.m].filter(Boolean).join(" · "))}</small>`:""}</div><span class="num qa ${r.inn?"in":"out"}" dir="ltr">${r.inn?"+":"−"}${money(r.a)}</span>${edit&&!(ownLock()&&false)?`<button type="button" class="x" data-qdel="${r.k}|${r.i}" aria-label="حذف">×</button>`:""}</div>`).join("")}${!S.qkAll&&rows.length>5?`<button type="button" class="link qkmore" data-qkall="1">عرض كل الحركات (${rows.length}) – الظاهر آخر 4</button>`:S.qkAll&&rows.length>5?`<button type="button" class="link qkmore" data-qkall="0">إخفاء الحركات القديمة</button>`:""}<div class="qr qt"><span></span><div class="qn"><b>إجمالى المنصرف (${(n=>n+" "+(n>=3&&n<=10?"حركات":"حركة"))(rows.filter(r=>!r.inn).length)})</b></div><span class="num qa out" dir="ltr">−${money(sum)}</span>${edit?"<span></span>":""}</div></div>`:`<p class="small muted" style="margin:8px 2px 0">لا توجد حركات خزنة فى هذا اليوم.</p>`}
+  ${rows.length?`<div class="qkl">${(S.qkAll||rows.length<=5?rows:rows.slice(-4)).map(r=>`<div class="qr"><span class="pill ${r.inn?"ok":r.k==="adv"?"warn":""}">${r.l}</span><div class="qn"><b>${esc(r.pt)}</b>${r.dt||r.m?`<small>${esc([r.dt,r.m].filter(Boolean).join(" · "))}</small>`:""}</div><span class="num qa ${r.inn?"in":"out"}" dir="ltr">${r.inn?"+":"−"}${money(r.a)}</span>${edit?`<button type="button" class="qe" data-qedit="${r.k}|${r.i}" aria-label="تعديل" title="تعديل">✎</button><button type="button" class="x" data-qdel="${r.k}|${r.i}" aria-label="حذف">×</button>`:""}</div>`).join("")}${!S.qkAll&&rows.length>5?`<button type="button" class="link qkmore" data-qkall="1">عرض كل الحركات (${rows.length}) – الظاهر آخر 4</button>`:S.qkAll&&rows.length>5?`<button type="button" class="link qkmore" data-qkall="0">إخفاء الحركات القديمة</button>`:""}<div class="qr qt"><span></span><div class="qn"><b>إجمالى المنصرف (${(n=>n+" "+(n>=3&&n<=10?"حركات":"حركة"))(rows.filter(r=>!r.inn).length)})</b></div><span class="num qa out" dir="ltr">−${money(sum)}</span>${edit?"<span></span><span></span>":"<span></span>"}</div></div>`:`<p class="small muted" style="margin:8px 2px 0">لا توجد حركات خزنة فى هذا اليوم.</p>`}
   </div>`}
 function qkErr(t){toast(t);return false}
+async function qkEdit(k,i){const date=S.cur.date;const r=S.cur[k]&&S.cur[k][i];if(!r)return;const m=M();
+  const F=(n,l,v,dec)=>`<label class="f">${l}<input name="${n}" value="${esc(v??"")}"${dec?' inputmode="decimal"':""}></label>`;
+  const SL=(n,l,list,v,blank)=>`<label class="f">${l}<select name="${n}">${opts(list,v,blank)}</select></label>`;
+  const MM=SL("m","طريقة السداد",METHODS,r.m||"نقدى",false);let body="";
+  if(k==="pay")body=SL("acc","الحساب",[...m.suppliers.map(s=>["sup:"+s.id,s.name]),...m.workers.map(w=>["wrk:"+w.id,w.name+" (عامل)"])],r.acc,false)+F("a","المبلغ",r.a,1)+MM+F("n","ملاحظة",r.n);
+  else if(k==="adv")body=SL("w","العامل",m.workers.map(w=>[w.id,w.name]),r.w,"شخص آخر")+(r.w?"":F("nm","الاسم",r.nm))+F("a","المبلغ",r.a,1)+MM+F("n","ملاحظة",r.n);
+  else if(k==="exp")body=F("d","البيان",r.d)+SL("c","التصنيف",m.cats,r.c||"","— التصنيف —")+F("a","المبلغ",r.a,1)+MM+F("rc","رقم الإيصال",r.rc);
+  else if(k==="wat")body=(r.sup?SL("sup","مقاول المياه",watSups().map(s=>[s.id,s.name]),r.sup,false):F("s","المورد",r.s))+F("n","عدد النقلات",r.n,1)+F("p","سعر النقلة",r.p,1)+(r.sup?F("pd","مدفوع الآن",r.pd,1):F("a","أو المبلغ مباشرة",r.a,1))+MM+F("nt","ملاحظة",r.nt);
+  else if(k==="dsl")body=SL("e","المعدة",(()=>{const L=dslTargets(date);if(r.e&&!L.some(x=>x[0]===r.e))L.push([r.e,stEqName(r.e)]);return L})(),r.e||"","أخرى / مولد")+F("l","اللترات",r.l,1)+F("p","سعر اللتر",r.p,1)+F("s","المحطة",r.s)+F("a","أو المبلغ مباشرة",r.a,1)+F("n","ملاحظة",r.n);
+  else if(k==="inc")body=(r.src==="partner"?SL("p","الشريك",m.partners.map(p=>[p.id,p.name]),r.p,false):"")+F("a",r.src==="mst"?"الصافى المحصّل":"المبلغ",r.a,1)+MM+F("n","ملاحظة",r.n);
+  else if(k==="stin")body=F("q","الكمية",r.q,1)+F("p","سعر الوحدة",r.p,1)+F("a","أو المبلغ",r.a,1)+F("s","المورد",r.s)+MM+F("n","ملاحظة",r.n);
+  else return;
+  const v=await modal({title:"تعديل الحركة",body:`<div class="g w">${body}</div>`,ok:"حفظ التعديل"});if(!v)return;
+  Object.entries(v).forEach(([key,val])=>{val=String(val).trim();if(val==="")delete r[key];else r[key]=val});
+  ["a","pd","l","p","q"].forEach(x=>{if(r[x]!==undefined&&num(r[x])!==null)r[x]=num(r[x])});if(k==="wat"&&r.n!==undefined&&num(r.n)!==null)r.n=num(r.n);
+  if(k==="adv"&&r.w)delete r.nm;markDirty();toast("تم تعديل الحركة");render()}
 function qkAdd(){if(!S.cur||!canEditDay(S.cur.date))return;qkRead();const q=S.qk,t=q.t,date=S.cur.date;const a=num(q.a);const m=q.m||"نقدى";let row=null,label="";
   if(t==="pay"){if(!q.w)return qkErr("اختر الحساب");if(!a)return qkErr("اكتب المبلغ");row={acc:q.w,a,m,n:q.n||"",per:date.slice(0,7)};label=accName(q.w)}
   else if(t==="adv"){if(!q.w)return qkErr("اختر العامل");if(!a)return qkErr("اكتب المبلغ");row={w:q.w,a,m,n:q.n||""};label=(byId(M().workers,q.w)||{}).name}
@@ -1529,7 +1546,8 @@ function qkAdd(){if(!S.cur||!canEditDay(S.cur.date))return;qkRead();const q=S.qk
   if(!row)return;S.cur[t].push(row);markDirty();
   const keep={t,m};if(t==="exp")keep.c=q.c;if(t==="wat"){keep.w=q.w;keep.p=q.p;keep.s=q.s}S.qk=keep;
   S.qkFocus=t==="exp"?"qkD":t==="wat"?"qkQ":"qkW";toast("تم تسجيل: "+(label||"")+" – "+money(t==="wat"?watAmt(row,date):a)+" ج");render()}
-$("#main").addEventListener("click",e=>{if(S.tab!=="day"||!S.cur)return;const b=e.target.closest("[data-qkt],[data-qkf],[data-qkadd],[data-qdel],[data-qkall]");if(!b)return;
+$("#main").addEventListener("click",e=>{if(S.tab!=="day"||!S.cur)return;const b=e.target.closest("[data-qkt],[data-qkf],[data-qkadd],[data-qdel],[data-qkall],[data-qedit]");if(!b)return;
+  if(b.dataset.qedit){if(!canEditDay(S.cur.date))return toast("اليومية مقفولة – اطلب فتحها للتعديل");const[k,i]=b.dataset.qedit.split("|");qkEdit(k,+i);return}
   if(b.dataset.qkall){S.qkAll=b.dataset.qkall==="1";render();return}
   if(b.dataset.qkt){qkRead();const keepM=S.qk.m;S.qk={t:b.dataset.qkt,m:keepM};S.qkFocus="qkW";if(b.dataset.qkt==="exp")S.qkFocus="qkC";render();return}
   if(b.dataset.qkf){qkRead();const k=b.dataset.qkf;if(S.qk.t==="exp"){const[c,d]=k.split("|");S.qk.c=c;S.qk.d=d}else{S.qk.w=k;if(S.qk.t==="dsl"){S.qk.p=String(lastDslPrice(S.cur.date,k)||"")}if(S.qk.t==="wat"){const last=Object.keys(S.days).sort().reverse().map(d=>(S.days[d].wat||[]).slice().reverse().find(r=>r.s===k&&n0(r.p))).find(Boolean);if(last)S.qk.p=String(last.p)}}S.qkFocus=S.qk.t==="wat"?"qkQ":S.qk.t==="dsl"?"qkP":"qkA";render();return}
