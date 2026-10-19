@@ -11,6 +11,8 @@
 @media(max-width:520px){#foot.odr .foot-in{flex-wrap:wrap;row-gap:8px}#foot.odr .fstat{flex-basis:calc(100% - 52px)}#foot.odr .fact{flex-basis:100%;display:flex;gap:6px}#foot.odr .fact .btn{flex:1 1 0;padding-inline:8px;white-space:nowrap}}
 [data-theme="dark"] .cdr.add .ctag{background:#123A26;color:#9FE3BD}[data-theme="dark"] .cdr.rem .ctag{background:#4A1A1A;color:#FFB0B0}[data-theme="dark"] .cdr.mod .ctag{background:#4A3A10;color:#FFD98A}[data-theme="dark"] .cba .was{color:#FF9C9C}[data-theme="dark"] .cba .now{color:#8FE0B0}
 .qr .qe{border:0;background:rgba(27,36,64,.07);color:var(--ink,#1B2440);border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;flex:none}[data-theme="dark"] .qr .qe{background:rgba(255,255,255,.08);color:#E6EAF5}
+.okb{font:inherit;font-size:13px;font-weight:800;border:1px solid #9FD8B8;background:#E3F6EC;color:#11663D;border-radius:9px;padding:4px 12px;cursor:pointer;margin-inline-start:6px}[data-theme="dark"] .okb{background:#123A26;color:#9FE3BD;border-color:#2C6B49}
+@keyframes okfl{0%{box-shadow:0 0 0 3px rgba(17,102,61,.55)}100%{box-shadow:0 0 0 0 rgba(17,102,61,0)}}.okflash{animation:okfl .9s ease-out}
 </style></head><body><script>(function(){try{var m=matchMedia("(prefers-color-scheme: dark)");var f=function(){document.documentElement.setAttribute("data-theme",m.matches?"dark":"light")};f();if(m.addEventListener)m.addEventListener("change",f);else m.addListener(f)}catch(e){}})()</script>
 <title>يومية موقع الزعفرانة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -691,7 +693,10 @@ function onRemote(key){
   if(key==="days"&&S.cur&&!S.dirty&&!S.saving&&!(ownLock()&&S.odraft[S.cur.date])){const focused=document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#dayForm");
     if(!focused){const d=S.days[S.cur.date];if(d)S.cur=normDay(clone(d),S.cur.date)}}
 }
-let renderT=null;function scheduleRender(){clearTimeout(renderT);renderT=setTimeout(render,40)}
+let renderT=null;function scheduleRender(){clearTimeout(renderT);renderT=setTimeout(()=>{if(typingDay()){S.pendR=true;return}render()},40)}
+/* while the user is typing in the day page, updates coming from the server must not redraw the page (that wiped half-typed times / closed the phone keyboard) – redraw once he leaves the field */
+function typingDay(){const a=document.activeElement;return!!(S.tab==="day"&&a&&a.closest&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest("#dayForm"))}
+document.addEventListener("focusout",()=>{setTimeout(()=>{if(S.pendR&&!typingDay()){S.pendR=false;render()}},300)});
 
 /* ============================================================ roles */
 function resolveRole(){if(S.local){S.role="owner";S.perms=Object.keys(PERMS);S.accPerms=Object.keys(ACC_PERMS)}}
@@ -987,8 +992,7 @@ async function afterAuth(u){
   S.roleUnsub=S.db.doc("roles/"+u.uid).onSnapshot(s=>{const r=s.exists?s.data():null;const prev=S.role;S.roleDoc=r;
     const nr=r&&r.active!==false?r.role:"none";S.role=nr;S.myName=r?(r.name||""):"";S.perms=(r&&r.perms)||[];S.accPerms=(r&&r.acc&&r.acc.length)?r.acc:DEF_ACC;
     if(nr==="field")S.master=normMaster(r.view||{});
-    if(prev!==nr){if(nr!=="field")S.master=null;subscribe()}
-    render()},e=>{console.warn(e);S.role="none";render()});
+    if(prev!==nr){if(nr!=="field")S.master=null;subscribe();render()}else scheduleRender()},e=>{console.warn(e);S.role="none";render()});
 }
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-acct]");if(!b)return;
   if(b.dataset.acct==="out"){const ok=await modal({title:"تسجيل الخروج",body:"<p>هل تريد الخروج من التطبيق على هذا الجهاز؟</p>",ok:"خروج"});if(!ok)return;if(S.dirty)await saveDay();await S.auth.signOut()}
@@ -1131,7 +1135,7 @@ function renderDayInner(main){
         <label class="f">النهاية<input type="time" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="t" value="${esc(h.t||"")}"${ro2}></label>`}
         <label class="f dhf${n0(h.dh)?" dh-on":""}">خصم (ساعة)<input inputmode="decimal" placeholder="0" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="dh" value="${esc(h.dh??"")}"${ro2}></label>
         <label class="f dr">سبب الخصم<input ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="dr" value="${esc(h.dr||"")}"${ro2}></label>
-        <div class="net${bad?" bad":""}" data-hrs-box>${rows.length>1&&h._src!=="new"?(h._src==="day"?`<select class="in mini" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="w"${ro2}>${opts(WTK.map(k=>[k,WT[k]]),rowWt("h",h,date),false)}</select>`:`<span class="pill wtp ${rowWt("h",h,date)}">${WT[rowWt("h",h,date)]}</span>`):""}الصافي <b class="num"><span data-hrs>${fmt(hrs,2)}</span> س</b>${bad?' <span class="wtag">⚠ راجع</span>':""} ${byTag(h)}${h._src!=="new"&&canRow(h)?` <button type="button" class="link small" data-del="hourly" ${srcAttrs(h)}>حذف</button>`:""}</div></div>`}).join("");
+        <div class="net${bad?" bad":""}" data-hrs-box>${rows.length>1&&h._src!=="new"?(h._src==="day"?`<select class="in mini" ${srcAttrs(h)} data-arr="hourly" data-e="${e.id}" data-k="w"${ro2}>${opts(WTK.map(k=>[k,WT[k]]),rowWt("h",h,date),false)}</select>`:`<span class="pill wtp ${rowWt("h",h,date)}">${WT[rowWt("h",h,date)]}</span>`):""}الصافي <b class="num"><span data-hrs>${fmt(hrs,2)}</span> س</b>${bad?' <span class="wtag">⚠ راجع</span>':""} ${byTag(h)}${h._src!=="new"&&canRow(h)?` <button type="button" class="link small" data-del="hourly" ${srcAttrs(h)}>حذف</button>`:""}${(h._src==="new"?edit:canRow(h))?` <button type="button" class="okb" data-okrow="1">✓ تم</button>`:""}</div></div>`}).join("");
     return`<div class="eq">${head}${wtH}${list}${evlBox("h",e.id)}</div>`}).join("")||'<div class="empty">لا توجد معدات بالساعة نشطة. أضفها من الإعدادات.</div>';
   // monthly & workers exceptions
   const exLine=(it,key,sub)=>{const x=d[key].find(z=>z.id===it.id)||{};const k=x.k||"";const lock=!edit;
@@ -1157,7 +1161,7 @@ function renderDayInner(main){
         ${split?"":`<div class="wtrow tev"><span class="evlab">نقل</span>${wtSeg("t",t.id,date,"data-wt",edit)}</div>`}
         ${list.map(rowBlock).join("")}
         ${edit&&list[0]._src!=="new"&&dayRows.length&&n0(list[0].n)?`<button type="button" class="link small tsadd" data-trksplit="${t.id}">+ تقسيم النقلات على نوع شغل آخر</button>`:""}
-        <div class="tfoot"><span class="num mny" data-trk="${t.id}">${totV?`${fmt(rows.reduce((a,x)=>a+truckM3(x,t),0),2)} م³ = <b>${money(totV)}</b> ج`:"—"}</span><span>${WARN.trk[t.id]?`<span class="wtag">⚠ ${esc(WARN.trk[t.id])}</span> `:""}${ents.map(o=>`<span class="pill">${fmt(o.n)} نقلة${n0(o.dm)?" − "+fmt(o.dm,2)+" م³":""} · ${WT[rowWt("t",o,date)]} ${byTag(o)}</span>`).join(" ")} ${!rows.some(x=>n0(x.n))?offBtn("trk",t.id,false):""}</span></div>${evlBox("t",t.id).replace('class="evl"','class="evl tev"')}</div>`}).join("")}`}).join("")||'<div class="empty">لا توجد سيارات نقل نشطة. أضفها من الإعدادات.</div>';
+        <div class="tfoot"><span class="num mny" data-trk="${t.id}">${totV?`${fmt(rows.reduce((a,x)=>a+truckM3(x,t),0),2)} م³ = <b>${money(totV)}</b> ج`:"—"}</span><span>${WARN.trk[t.id]?`<span class="wtag">⚠ ${esc(WARN.trk[t.id])}</span> `:""}${ents.map(o=>`<span class="pill">${fmt(o.n)} نقلة${n0(o.dm)?" − "+fmt(o.dm,2)+" م³":""} · ${WT[rowWt("t",o,date)]} ${byTag(o)}</span>`).join(" ")} ${!rows.some(x=>n0(x.n))?offBtn("trk",t.id,false):""}${edit?` <button type="button" class="okb" data-okrow="1">✓ تم</button>`:""}</span></div>${evlBox("t",t.id).replace('class="evl"','class="evl tev"')}</div>`}).join("")}`}).join("")||'<div class="empty">لا توجد سيارات نقل نشطة. أضفها من الإعدادات.</div>';
   const itemsAct=(m.items||[]).filter(it=>isActive(it,date)||d.itm.some(x=>x.i===it.id));
   const itemsHtml=itemsAct.map(it=>{const rows=d.itm.filter(x=>x.i===it.id);const tot=rows.reduce((a,x)=>a+n0(x.n),0);const r=itemRate(it,date);
     const editable=rows.find(x=>x._src==="day")||{i:it.id,_src:"new",_i:-1};const others=rows.filter(x=>x!==editable);
@@ -1338,6 +1342,7 @@ $("#main").addEventListener("click",async e=>{
     if(n){markDirty();render();toast("تم نسخ "+n+" سطر من يومية أمس – راجع وعدّل")}else toast("كل البنود مسجلة اليوم بالفعل");return}
   if(b.dataset.day)dayAction(b.dataset.day);
 });
+$("#main").addEventListener("click",async e=>{const b=e.target.closest("[data-okrow]");if(!b)return;e.preventDefault();const a=document.activeElement;if(a&&a.blur)a.blur();if(S.dirty){await saveDay()}const box=b.closest(".hrow,.tk,.eq");if(box){box.classList.remove("okflash");void box.offsetWidth;box.classList.add("okflash")}toast(S.dirty?"جاري الحفظ…":"✓ تم الحفظ");if(S.pendR){S.pendR=false;render()}});
 $("#foot").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(b&&S.cur)dayAction(b.dataset.day)});
 function copyHourly(only){const y=mergedDay(addDays(S.cur.date,-1),false);const m=M();let n=0;const done=new Set();
   y.hourly.forEach(h=>{if(only&&h.e!==only)return;const e=byId(m.hourly,h.e);if(!e||!isActive(e,S.cur.date))return;if(S.cur.hourly.some(x=>x.e===h.e)&&!done.has(h.e))return;if(!(h.s||h.t||n0(h.h)))return;
